@@ -1,0 +1,138 @@
+---
+title: "LU Decomposition"
+format: html
+---
+
+```{r}
+#| echo: false
+rm(list=ls())
+library(matlib)
+A <- matrix(c(-3,2,-1,6,-6,7,3,-4,4), ncol=3, byrow=TRUE)
+M1 <- matrix(c(1,0,0,2,1,0,0,0,1), ncol=3, byrow=TRUE)
+M2 <- matrix(c(1,0,0,0,1,0,1,0,1), ncol=3, byrow=TRUE)
+M3 <- matrix(c(1,0,0,0,1,0,0,-1,1), ncol=3, byrow=TRUE)
+
+U <- M3%*%M2%*%M1%*%A
+L <- solve(M1)%*%solve(M2)%*%solve(M3)
+
+ltxA <- matlib::latexMatrix(A, matrix="bmatrix")$matrix
+ltxM1 <- matlib::latexMatrix(M1, matrix="bmatrix")$matrix
+ltxM2 <- matlib::latexMatrix(M2, matrix="bmatrix")$matrix
+ltxM3 <- matlib::latexMatrix(M3, matrix="bmatrix")$matrix
+ltxU <- matlib::latexMatrix(U, matrix="bmatrix")$matrix
+
+ltxM1_inv <- matlib::latexMatrix(solve(M1), matrix="bmatrix")$matrix
+ltxM2_inv <- matlib::latexMatrix(solve(M2), matrix="bmatrix")$matrix
+ltxM3_inv <- matlib::latexMatrix(solve(M3), matrix="bmatrix")$matrix
+ltxL <- matlib::latexMatrix(L, matrix="bmatrix")$matrix
+```
+
+## Motivation
+Let's say we're in the situation where we need to solve the equation
+$\textbf{A}x = b$ repeatedly for a large number of vectors $b$. Constantly
+solving this equation via Gaussian elimination would be very computationally
+expensive as $\mathcal{O}(N)=N^3$ for this process. There is a much better way,
+thankfully. It involves a matrix decomposition. A matrix decomposition is just
+the situation where a matrix is decomposed into two or more other matrices.
+There are many different types of decomposition and they each serve a purpose.
+The LU decomposition decomposes the matrix $\textbf{A}$ into an upper triangular
+and a lower triangular matrix. As we'll see, this allows for the solution to
+$\textbf{A}x=b$ to proceed without the need to perform Gaussian elimination more
+than once. The means that using LU decomposition to solve for $r$ right hand
+side vectors scales as $\mathcal{O}(N) = N^3 + rN^2$ where as performing Gaussian
+elimination each time would scales as $\mathcal{O}(N)=rN^3$.
+
+## How it works
+Consider the matrix $\textbf{A}=`r ltxA`$. We have to use Gaussian elimiation to
+get this matrix into an upper triangular form. The row operations to do this
+are:
+$$
+\begin{aligned}
+-2R_1 + R_2\to R_2\\
+R_1 + R_3\to R_3\\
+-R_2 + R_3\to R_3\\
+\end{aligned}
+$$
+
+### Elementary matrices
+An elementary matrix is the identity matrix with a single off diagonal element
+changed to a new arbitrary value. We can use elementary matrices to represent
+row operations. The elementary matrices below represent the row operations
+required to transform A, defined above, into an upper triangular matrix.
+
+The first row operation can be accomplished with the elementary matrix $M_1$,
+
+$\pmb{M}_1=`r ltxM1`$
+
+
+The second row operation can be accomplished with the elementary matrix $M_2$,
+
+$\pmb{M}_2=`r ltxM2`$
+
+
+The first row operation can be accomplished with the elementary matrix $M_3$,
+
+$\pmb{M}_3=`r ltxM3`$
+
+## The LU Decomposition
+Applying these matrices in order results in an upper triangular matrix, 
+$\pmb{U} = \pmb{M}_3\pmb{M}_2\pmb{M}_1\pmb{A}$ results in the following matrix:
+
+$\pmb{U}=`r ltxU`$
+
+The equation above shows how we get the lower triangular matrix. If we left 
+multiply by the inverses of the matrices $M_1$, $M_2$ and $M_3$ the resulting
+equation is $\pmb{M}_1^{-1}\pmb{M}_2^{-1}\pmb{M}_3^{-1}\pmb{U} = \pmb{A}$. We
+then define $\pmb{L}$ as $\pmb{L} = \pmb{M}_1^{-1}\pmb{M}_2^{-1}\pmb{M}_3^{-1}$.
+
+The inverses of the elementary matrices are really easy to compute. Recall that
+the inverse of a matrix undoes the operation performed by the matrix itself.
+Consider matrix $M_1$. If $M_1$ has the effect of multiplying row 1 by 2 and
+adding it to row 2, then the inverse would be to multiply row 1 by -2 and adding
+that to row 2. Therefore,
+
+$\pmb{M_1}^{-1}=`r ltxM1_inv`$
+
+The other two elementary matrices' inverses are found the same way:
+
+$\pmb{M_2}^{-1}=`r ltxM2_inv`$
+
+$\pmb{M_3}^{-1}=`r ltxM3_inv`$
+
+The lower triangular matrix $\pmb{L}$ is just the matrix product of the inverses 
+of the 3 elementary matrices.
+
+$\pmb{L} = `r ltxM1_inv` `r ltxM2_inv` `r ltxM3_inv` = `r ltxL`$.
+
+# Solving for new vectors
+Now that we have both $\pmb{L}$ and $\pmb{U}$, we can solve for new right hand 
+side vectors, $\pmb{b}_r$ using the following strategy.
+
+$$
+\begin{aligned}
+&\pmb{A}\pmb{x} = \pmb{b}\\
+&\pmb{L}\pmb{U}\pmb{x} = \pmb{b}\\
+&\pmb{L}(\pmb{U}\pmb{x}) = \pmb{b}
+\end{aligned}
+$$
+Now, we let $\pmb{U}\pmb{x}=\pmb{y}$ and then the last equation above becomes
+$$
+\pmb{L}\pmb{y} = \pmb{b}
+$$
+Now, we can easily and quickly solve this equation using forward substitution 
+because we have $\pmb{L}$ and $\pmb{b}$. Once we have solved for $\pmb{y}$, we
+can then solve $\pmb{U}\pmb{x}=\pmb{y}$ for $\pmb{x}$ using backward 
+substitution.
+
+The following R code shows the LU decomposition in action.
+
+```{r}
+A <- matrix(c(-3,2,-1,6,-6,7,3,-4,4), ncol=3, byrow=TRUE)
+b <- c(-1,-7,-6)
+LU_decomp <- matlib::LU(A)
+y <- solve(LU_decomp$L,b)
+x <- solve(LU_decomp$U,y)
+ltx_x <- matlib::latexMatrix(as.matrix(x), matrix="bmatrix")$matrix
+```
+
+$\pmb{x} = `r ltx_x`$.
