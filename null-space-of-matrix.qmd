@@ -1,0 +1,224 @@
+---
+title: "The Null Space of a Matrix"
+format: html
+---
+
+```{r}
+#| echo: false
+rm(list=ls())
+library(matlib)
+
+A <- matrix(c(-3,6,-1,1,-7,
+              1,-2,2,3,-1,
+              2,-4,5,8,-4), byrow=TRUE, ncol=5)
+
+rrefA <- matlib::gaussianElimination(A)
+
+ltxA <- matlib::latexMatrix(A, matrix="bmatrix")$matrix
+ltxrrefA <- matlib::latexMatrix(rrefA, matrix="bmatrix")$matrix
+```
+The null space of a matrix, $Null(A)$, is one of the four fundamental subspaces.
+The null space is vector space defined by the equation 
+$\pmb{A}\pmb{x}=\pmb{0}$. Essentially, the null space is the set of all vectors 
+that are mapped to the zero vector by the matrix $\pmb{A}$.
+
+## Finding a basis for $Null(A)$
+Consider the following matrix,
+
+$A=`r ltxA`$.
+
+To determine the basis vectors of $Null(A)$, we need to get $pmb{A}$ into 
+reduced row echelon form to identify the pivot columns.
+
+$rref(A) = `r ltxrrefA`$
+
+The pivot columns for the reduced row echelon form of $\pmb{A}$ are 1 and 3,
+corresponding to the variables $x_1$ and $x_3$.
+
+We call the variables $x_1$ and $x_3$ **basic** variables. They are defined in
+terms of the variables $x_2$, $x_4$ and $x_5$. These are known as **free**
+variables because they can take on any value. They are not constrained in any
+way, hence being dubbed "free".
+
+We can solve for $x_1$ and $x_3$ using the reduced row echelon form. Recall that
+$Null(A)$ is defined by $\pmb{A}\pmb{x}=\pmb{0}$ so the first row of $rref(A)$ is
+$x_1 - 2x_2 + 0x_3 - x_4 + 3x_5 = 0$. We then solve for $x_1$. We do the exact
+same thing for $x_3$ using the second row of $rref(A)$. The resulting equations
+give us both $x_1$ and $x_3$ in terms of the free variables.
+
+$$
+\begin{aligned}
+x_1 &= 2x_2 + x_4 - 3x_5\\
+x_3 &= -2x_4 + 2x_5
+\end{aligned}
+$$
+
+Now, we can rewrite a generic solution of the homogeneous equation 
+$\pmb{A}\pmb{x}=\pmb{0}$ as
+
+$$
+\begin{bmatrix} x_1 \\ 
+x_2 \\ 
+x_3 \\ 
+x_4 \\ 
+x_5 \\ 
+\end{bmatrix} = 
+\begin{bmatrix} 2x_2 + x_4 - 3x_5 \\ 
+x_2 \\ 
+-2x_4 + 2x_5 \\ 
+x_4 \\ 
+x_5 \\ 
+\end{bmatrix}
+$$
+Now, we can decompose the vector on the right hand side into a linear
+combination of vectors. This linear combination will form the basis of the null
+space of $\pmb{A}$.
+
+$$
+\begin{bmatrix} x_1 \\ 
+x_2 \\ 
+x_3 \\ 
+x_4 \\ 
+x_5 \\ 
+\end{bmatrix} = x_2
+\begin{bmatrix} 2 \\ 
+1 \\ 
+0 \\ 
+0 \\ 
+0 \\ 
+\end{bmatrix} + x_4
+\begin{bmatrix} 1 \\ 
+0 \\ 
+-2 \\ 
+1 \\ 
+0 \\ 
+\end{bmatrix} + x_5
+\begin{bmatrix} -3 \\ 
+0 \\ 
+2 \\ 
+0 \\ 
+1 \\ 
+\end{bmatrix}
+$$
+
+Therefore, a basis for $Null(A)$ is
+$$
+\left\{ 
+\begin{bmatrix} 2 \\ 
+1 \\ 
+0 \\ 
+0 \\ 
+0 \\ 
+\end{bmatrix},
+\begin{bmatrix} 1 \\ 
+0 \\ 
+-2 \\ 
+1 \\ 
+0 \\ 
+\end{bmatrix},
+\begin{bmatrix} -3 \\ 
+0 \\ 
+2 \\ 
+0 \\ 
+1 \\ 
+\end{bmatrix}
+\right\}.
+$$
+
+## Solutions to an underdetermined system
+An underdetermined system is one in which there are fewer equations than there
+are variables. This results in a matrix that has fewer rows than columns.
+
+The full solution is a combination of vectors that are mapped to the null space
+and those that are mapped into the row space (?) of $\pmb{A}$. Since the system
+is underdetermined, there is not a single solution to $\pmb{A}\pmb{x}=\pmb{b}$.
+
+If we let $\pmb{u}$ be a general vector in $Null(A)$ and let $\pmb{v}$ be a 
+vector that solves $\pmb{A}\pmb{x}=\pmb{b}$, then $\pmb{x} = \pmb{u} + \pmb{v}$
+is a general solution of $\pmb{A}\pmb{x}=\pmb{b}$.
+
+$$
+\pmb{A}\pmb{x}=\pmb{A}(\pmb{u}+\pmb{v}) = \pmb{A}\pmb{u}+\pmb{A}\pmb{v} = \pmb{0} + \pmb{b} = \pmb{b}
+$$
+So, in practice we solve the homogeneous equation and we also find the 
+particular solution for a specific $\pmb{b}$. For example, consider the system
+
+$$
+\begin{aligned}
+2x_1 + 2x_2 + x_3 = 0\\
+2x_1 - 2x_2 - x_3 = 1
+\end{aligned}
+$$
+
+```{r}
+#| echo: false
+A <- matrix(c(2,2,1,2,-2,-1), byrow=TRUE, ncol=3)
+b <- c(0,1)
+rref <- matlib::gaussianElimination(A,b,fractions=TRUE)
+ltxrref <- matlib::latexMatrix(rref, matrix="bmatrix")$matrix
+```
+
+The reduced row echelon form of the augmented matrix is
+
+$rref(A)=`r ltxrref`$.
+
+To solve for the null space basis, we see that we have two basic variables, 
+$x_1$ and $x_2$. $x_3$ is free.
+
+Here, $x_1=0$ and $x_2 = -1/2x_3$. Our basis vector for the null space is then
+$$
+\begin{bmatrix}
+0 \\ 
+-1/2 x_3 \\ 
+x_3
+\end{bmatrix} =  x_3
+\begin{bmatrix}
+0 \\ 
+-1/2 \\ 
+1
+\end{bmatrix}
+$$
+$x_3$ is arbitrary, the basis vector itself is simply
+
+$$
+\begin{bmatrix}
+0 \\ 
+-1/2 \\ 
+1
+\end{bmatrix}
+$$
+Now, we just need to solve for the particular solution. Here, we use the full
+augmented matrix.
+
+We can readily see that $x_1=1/4$. Now, since $x_3$ is free, we can pick any 
+particular value for it. The most convenient choice is $x_3=0$. Doing this 
+results in $x_2 = -1/4$. Therefore, our particular solution is
+
+$$
+\begin{bmatrix}
+1/4 \\ 
+-1/4 \\ 
+0
+\end{bmatrix}
+$$
+
+The complete solution for the system is the combination of these two results.
+
+$$
+\begin{bmatrix}
+x_1 \\ 
+x_2 \\ 
+x_3
+\end{bmatrix} = a
+\begin{bmatrix}
+0 \\ 
+-1/2 \\ 
+1
+\end{bmatrix} +
+\begin{bmatrix}
+1/4 \\ 
+-1/4 \\ 
+0
+\end{bmatrix}
+$$
+
