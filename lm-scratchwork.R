@@ -1,7 +1,8 @@
 ### Basic script for playing with linear models. Will form the basis of a more
 ### sophisticated code base.
+rm(list=ls())
 library(tidyverse)
-
+library(matlib)
 
 X <- model.matrix(~ hp+wt, data = mtcars) |> unname()
 Y <- mtcars$mpg
