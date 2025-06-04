@@ -51,8 +51,6 @@ B_varcov <- MSE*X_t_X_inv
 # get the standard errors for the estimates
 SE_estimates <- sqrt(diag(B_varcov))
 
-# Add in a homegrown VIF object
-
 # Create R sqr and adjusted R sqr info
 R_sqr <- SSR/SSTO
 R_adj <- 1 - (n-1)/(n-k)*(SSE/SSTO)

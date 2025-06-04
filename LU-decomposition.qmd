@@ -43,9 +43,11 @@ side vectors scales as $\mathcal{O}(N) = N^3 + rN^2$ where as performing Gaussia
 elimination each time would scales as $\mathcal{O}(N)=rN^3$.
 
 ## How it works
-Consider the matrix $\textbf{A}=`r ltxA`$. We have to use Gaussian elimiation to
-get this matrix into an upper triangular form. The row operations to do this
-are:
+Consider the matrix $\textbf{A}=`r ltxA`$. 
+
+We have to use Gaussian elimination to get this matrix into an upper triangular
+form. The row operations to do this are:
+
 $$
 \begin{aligned}
 -2R_1 + R_2\to R_2\\
@@ -62,17 +64,17 @@ required to transform A, defined above, into an upper triangular matrix.
 
 The first row operation can be accomplished with the elementary matrix $M_1$,
 
-$\pmb{M}_1=`r ltxM1`$
+$\pmb{M}_1=`r ltxM1`$.
 
 
 The second row operation can be accomplished with the elementary matrix $M_2$,
 
-$\pmb{M}_2=`r ltxM2`$
+$\pmb{M}_2=`r ltxM2`$.
 
 
-The first row operation can be accomplished with the elementary matrix $M_3$,
+The third row operation can be accomplished with the elementary matrix $M_3$,
 
-$\pmb{M}_3=`r ltxM3`$
+$\pmb{M}_3=`r ltxM3`$.
 
 ## The LU Decomposition
 Applying these matrices in order results in an upper triangular matrix, 
@@ -115,14 +117,12 @@ $$
 &\pmb{L}(\pmb{U}\pmb{x}) = \pmb{b}
 \end{aligned}
 $$
-Now, we let $\pmb{U}\pmb{x}=\pmb{y}$ and then the last equation above becomes
-$$
-\pmb{L}\pmb{y} = \pmb{b}
-$$
-Now, we can easily and quickly solve this equation using forward substitution 
-because we have $\pmb{L}$ and $\pmb{b}$. Once we have solved for $\pmb{y}$, we
-can then solve $\pmb{U}\pmb{x}=\pmb{y}$ for $\pmb{x}$ using backward 
-substitution.
+We let $\pmb{U}\pmb{x}=\pmb{y}$ and then the last equation above becomes
+$\pmb{L}\pmb{y} = \pmb{b}$.
+
+This equation can be very quickly solved using forward substitution because we
+have $\pmb{L}$ and $\pmb{b}$. Once we have solved for $\pmb{y}$, we can then
+solve $\pmb{U}\pmb{x}=\pmb{y}$ for $\pmb{x}$ using backward substitution.
 
 The following R code shows the LU decomposition in action.
 
