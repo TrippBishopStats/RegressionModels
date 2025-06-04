@@ -1,0 +1,256 @@
+---
+title: "Characterising Multivariate Data"
+format: html
+execute: 
+  warning: false
+  messages: false
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(matlib)
+```
+
+
+## Univariate mean and variance
+
+### The sample mean
+
+$$
+\bar{y} = \frac{\sum_{i=1}^n y_i}{n}
+
+$$
+The sample mean is an unbiased and consistent estimator of the population mean, 
+denoted $\mu$. In other words, $E[\bar{y}]=\mu$ and 
+$\text{var}(\bar{y})\to 0\text{ as } n\to\infty$.
+
+### The sample variance
+
+$$
+s^2 = \frac{\sum_{i=1}^n(y_i-\bar{y})^2}{n-1}
+$$
+It can be shown that $s^2$ is an unbiased and consistent estimator of the
+population variance, $\sigma^2$. In other words, $E[s^2]=\sigma^2$ and 
+$\text{var}(s^2)\to 0\text{ as } n\to\infty$.
+
+## Covariance
+
+```{r}
+# height and weight data for college males
+h <- c(69,74,68,70,72,67,66,70,76,68,72,79,74,67,66,71,74,75,75,76)
+w <- c(153,175,155,135,172,150,115,137,200,130,140,265,185,112,140,150,165,185,210,220)
+
+males <- cbind(h,w)
+n <- nrow(males)
+```
+
+$$
+S_{xy} = \frac{\sum_{i=1}^n(x_i - \bar{x})(y_i - \bar{y})}{n-1}
+$$
+
+We can use matrix algebra to determine the covariance matrix of the college
+males data, where height and weight form a bivariate random variable. We first
+have to centre the data. There are a lot of ways that the data can be centred.
+We can use the `apply` function applied across the columns with the `mean`
+function to determine the column means. Then, these values are substracted from
+the value in each cell by using a matrix difference. Another way to do this,
+which is pretty cool is with a $\pmb{j}$ vector and then using a series of
+matrix multiplications involving the $\pmb{j}$ vector and its transpose to
+create a $20\times 2$ matrix of means and then doing the same matrix difference
+to create the scaled values.
+
+$$
+\pmb{S}_m = \pmb{M} - \frac{1}{n}\pmb{j}'\pmb{j}\pmb{M}
+$$
+where $\pmb{M}$ is the matrix of original college males data and $\pmb{S}_m$ is 
+the scaled college male data.
+
+```{r}
+#scaling "by hand"
+
+# using the crutch of apply
+scaled_males <- males - matrix(rep(apply(males, 2, mean), each=n), ncol=2)
+
+# using a "j" vector
+j <- matrix(rep(1, times=n), ncol=1)
+scaled_males <- males - 1/n*j%*%t(j)%*%males # this second matrix is 20x2 matrix of means
+```
+
+The last way is super easy. Using the `scale` function from base R, the centring
+(and scaling if desired) can be done is a very simple line of code.
+
+
+```{r}
+scaled_males <- scale(males, center=TRUE, scale=FALSE)
+```
+
+We can then create the correlation matrix with the following matrix operation:
+
+$$
+S_{hw} = \frac{1}{n-1}S_{m}'S_{m}
+$$
+
+```{r}
+Shw <- t(scaled_males)%*%scaled_males/(n-1)
+```
+
+We can check our work with the `cov` function from the `stats` package.
+
+```{r}
+all.equal(Shw, cov(males))
+```
+
+This shows that the two approaches are equivalent, so the code above did what we
+wanted it to do.
+
+## Correlation
+Covariance is a really important concept in multivariate statistics, but the
+covariance between two variables isn't necessarily easy to interpret because the
+scales of the individual variables has a very strong influence on the value that
+is calculated. A scaled value is much more useful to determine the degree to
+which two random variables covary.
+
+We can scale the covariance by dividing by $s_x$ and $s_y$.
+$$
+r = \frac{\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum_{i=1}^n(x_i-\bar{x})^2 \sum_{i=1}^n(y_i-\bar{y})^2}}
+$$
+
+### Wild geometric explanation of correlation
+
+
+$$
+\pmb{x}\cdot\pmb{y} = \cos\theta||\pmb{x}||\cdot||\pmb{y}||
+$$
+where $||\pmb{x}|| = \sqrt{\pmb{x}'\pmb{x}}$
+
+
+
+$$
+\cos\theta = \frac{(\pmb{x} - \bar{x}\pmb{j})'(\pmb{y} - \bar{y}\pmb{j})}{\sqrt{(\pmb{x} - \bar{x}\pmb{j})'(\pmb{x} - \bar{x}\pmb{j})\cdot(\pmb{y} - \bar{y}\pmb{j})(\pmb{y} - \bar{y}\pmb{j})}} = r_{xy}
+$$
+
+```{r}
+X <- males[,1,drop=FALSE]
+Y <- males[,2,drop=FALSE]
+
+x_bar <- mean(X)
+y_bar <- mean(Y)
+
+XY <- t(X - x_bar*j)%*%(Y - y_bar*j)
+X2 <- t(X - x_bar*j)%*%(X - x_bar*j)
+Y2 <- t(Y - y_bar*j)%*%(Y - y_bar*j)
+
+R <- XY/sqrt(X2*Y2) |> as.numeric()
+```
+
+```{r}
+all.equal(R, cor(X,Y))
+```
+
+
+
+## Mean vectors
+
+```{r}
+# Calcium in soil data
+y1 <- c(35,35,40,10,6,20,35,35,35,30)
+y2 <- c(3.5,4.9,30.0,2.8,2.7,2.8,4.6,10.9,8.0,1.6)
+y3 <- c(2.80,2.70,4.38,3.21,2.73,2.81,2.88,2.90,3.28,3.20)
+
+soil <- cbind(y1,y2,y3)
+n <- nrow(soil)
+# calculate column sums
+
+j <- matrix(rep(1,times=n), ncol=1)
+
+row_means <- 1/n*t(j)%*%soil
+```
+
+
+
+
+## Covariance matrices
+
+
+$$
+\pmb{S} = \frac{\pmb{Y}'(\pmb{I} - \frac{1}{n}\pmb{J})\pmb{Y}}{n-1}
+$$
+
+```{r}
+Y <- soil
+J <- j%*%t(j)
+I <- diag(1, ncol=n, nrow=n)
+S <- t(Y)%*%(I - 1/n*J)%*%Y/(n-1)
+all.equal(S, cov(Y))
+```
+
+$$
+\pmb{S} = \frac{\sum_{i=1}^n (\pmb{y}_i-\pmb{\bar{y}})'(\pmb{y}_i-\pmb{\bar{y}})}{n-1}
+$$
+which can also be written as
+$$
+\pmb{S} = \frac{\sum_{i=1}^n \pmb{y}_i\pmb{y}_i' - n\pmb{\bar{y}}\pmb{\bar{y}}'}{n-1}
+$$
+
+## Correlation matrices
+The correlation matrix is very easy to create once we have the covariance
+matrix. One really easy way to create $\pmb{R}$, the correlation matrix, is to
+"divide" the covariance matrix, $\pmb{S}$, by the standard deviations of the
+variables. We can create a diagonal matrix, $\pmb{D}$, that uses the diagonal of
+$\pmb{S}$ as a standing point. The diagonal of $\pmb{S}$ is the variances of the
+variables, so we need to take the square root. Then, we need to divide the
+values of $\pmb{S}$ by all of the standard deviations of the variables.
+
+$$
+\pmb{R} = \pmb{D}_s^{-1}\pmb{S}\pmb{D}_s^{-1}
+$$
+
+```{r}
+D <- diag(sqrt(diag(S)), ncol=ncol(S))
+# for fun, we can invert without the solve function
+D_inv <- diag(1/sqrt(diag(S)), ncol=ncol(S)) 
+# the proof
+all.equal(D_inv,solve(D))
+
+R <- D_inv%*%S%*%D_inv
+
+# proof that they're equal. Have to unname the matrix produced by cor(Y) to get
+# all.equal to work as expected.
+all.equal(R, unname(cor(Y)))
+```
+
+```{r}
+ltx_Dinv <- latexMatrix(D_inv, matrix="pmatrix")$matrix
+ltx_S <- latexMatrix(S, matrix="pmatrix")$matrix
+ltx_DinvprodS <- latexMatrix(D_inv%*%S, matrix="pmatrix")$matrix
+ltx_R <- latexMatrix(R, matrix="pmatrix")$matrix
+```
+
+$`r ltx_Dinv` `r ltx_S` = `r ltx_DinvprodS`$
+
+This first step divides each element in $\pmb{S}$ by one of the variable
+standard deviations. For example, $s_{11}$ is divided by the standard deviation
+of $y_1$, and $s_{12}$ by the standard deviation of $y_2$, etc.
+
+$`r ltx_DinvprodS` `r ltx_Dinv` = `r ltx_R`$
+
+Then, to bring things home, we have to then divide each element by the other
+standard deviation represented in the particular covariance. For example,
+element $s_{13}$ represents the covariance of $y_1$ and $y_3$. To compute the
+correlation, we need $s_{13}/s_1s_3$, and by right multiplying by
+$\pmb{D}^{-1}$, we are achieving this.
+
+
+and conversely,
+
+$$
+\pmb{S} = \pmb{D}_s\pmb{R}\pmb{D}_s
+$$
+
+```{r}
+S <- D%*%R%*%D
+all.equal(S, unname(cov(Y)))
+```
+
+
