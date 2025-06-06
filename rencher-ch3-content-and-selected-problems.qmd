@@ -10,6 +10,7 @@ execute:
 rm(list=ls())
 library(tidyverse)
 library(matlib)
+library(kableExtra)
 ```
 
 
@@ -253,4 +254,389 @@ S <- D%*%R%*%D
 all.equal(S, unname(cov(Y)))
 ```
 
+
+## Linear combinations of variables
+
+
+```{r}
+y1 <- c(51,27,37,42,27,43,41,38,36,26,29)
+y2 <- c(36,20,22,36,18,32,22,21,23,31,20)
+y3 <- c(50,26,41,32,33,43,36,31,27,31,25)
+y4 <- c(35,17,37,34,14,35,25,20,25,32,26)
+y5 <- c(42,27,30,27,29,40,38,16,28,36,25)
+
+Y <- cbind(y1,y2,y3,y4,y5) |> unname()
+n <- nrow(Y)
+p <- ncol(Y)
+
+a <- matrix(sample(-9:9, size=p, replace=TRUE))
+b <- matrix(sample(-9:9, size=p, replace=TRUE))
+j <- matrix(rep(1, times=n), ncol=1)
+J <- j%*%t(j)
+I <- diag(ncol=n, nrow=n)
+
+# get column means
+y_bar <- t(t(j)%*%Y/n)
+
+# create covariance matrix
+S <- (t(Y)%*%(I-1/n*J)%*%Y)/(n-1)
+
+a <- matrix(c(3,-2,4,-1,1))
+b <- matrix(c(1,3,-1,1,-2))
+
+z <- Y%*%a
+w <- Y%*%b
+
+# mean and variance of RV z
+z_bar <- t(a)%*%y_bar
+s2_z <- t(a)%*%S%*%a
+
+# mean and variance of RV z
+w_bar <- t(b)%*%y_bar
+s2_w <- t(b)%*%S%*%b
+
+# the sample covariance between w & z
+s_wz <- t(a)%*%S%*%b
+
+r_wz <- s_wz/sqrt(t(a)%*%S%*%a * t(b)%*%S%*%b)
+```
+
+
+```{r}
+#| echo: false
+
+ltx_Y <- latexMatrix(Y, matrix="pmatrix")$matrix
+ltx_z <- latexMatrix(z, matrix="pmatrix")$matrix
+ltx_zt <- latexMatrix(t(z), matrix="pmatrix")$matrix
+ltx_w <- latexMatrix(w, matrix="pmatrix")$matrix
+ltx_wt <- latexMatrix(t(w), matrix="pmatrix")$matrix
+ltx_at <- latexMatrix(t(a), matrix="pmatrix")$matrix
+ltx_ybar <- latexMatrix(y_bar, matrix="pmatrix")$matrix
+ltx_a <- latexMatrix(a, matrix="pmatrix")$matrix
+ltx_at <- latexMatrix(t(a), matrix="pmatrix")$matrix
+ltx_b <- latexMatrix(b, matrix="pmatrix")$matrix
+ltx_bt <- latexMatrix(t(b), matrix="pmatrix")$matrix
+ltx_S <- latexMatrix(S, matrix="pmatrix")$matrix
+ltx_aS <- latexMatrix(t(a)%*%S, matrix="pmatrix")$matrix
+ltx_aSa <- latexMatrix(t(a)%*%S%*%a, matrix="pmatrix")$matrix
+```
+
+### The data
+The data consist of 5 variables with 11 subjects.
+
+```{r}
+#| echo: false
+as.data.frame(Y) |> 
+  kable(
+    col.names=c("$y_1$","$y_2$","$y_3$","$y_4$","$y_5$"),
+    caption="Reponse times for five probe word positions."
+  )
+```
+
+The mean of each variable is given by $\pmb{\bar{y}} = \pmb{j}'\pmb{Y}/n$, 
+$\pmb{\bar{y}}=`r round(y_bar,2)`$.
+
+The covariance matrix for the multivariate distribution of the 5 random variables is
+$\pmb{S} = \pmb{Y}'(\pmb{I}-\frac{1}{n}\pmb{J})\pmb{Y}$ and for this data,
+
+$\pmb{S} = `r ltx_S`$.
+
+Now, we will define $\pmb{z}$ to be a linear combination of $y_1$, $y_2$, $y_3$,
+$y_4$ and $y_5$ with the constants being contained in the vector 
+
+$\pmb{a}' = `r ltx_at`$. 
+
+$\pmb{z}$ is the matrix product of $\pmb{a}$ and the columns of $\pmb{Y}$ such 
+that $\pmb{z} = \pmb{Y}\pmb{a}$.
+
+$\pmb{z}' = `r ltx_zt`$
+
+Now, we will define $\pmb{w}$ to be a linear combination of $y_1$, $y_2$, $y_3$,
+$y_4$ and $y_5$ with the constants being contained in the vector 
+
+$\pmb{b}' = `r ltx_bt`$.
+
+$\pmb{w}$ is the matrix product of $\pmb{b}$ and the columns of $\pmb{Y}$ such 
+that $\pmb{w} = \pmb{Y}\pmb{b}$.
+
+$\pmb{w}' = `r ltx_wt`$
+
+### The mean of $z$
+Since $\pmb{z}$ is a linear combination of the random variables $Y_1$ - $Y_5$,
+it has both a mean and a variance.
+
+The mean of $\pmb{z}$ is simply the weighted means of the $Y_i$, where the
+weights are the elements of $\pmb{a}$.
+
+$$
+\bar{z} = \pmb{a}'\pmb{\bar{y}}
+$$
+
+In this example,
+
+$\bar{z} = `r ltx_at` `r ltx_ybar` = `r z_bar`$
+
+### The variance of $\pmb{z}$
+We can also calculate the variance of $\pmb{z}$ using the covariance matrix of
+$Y$. This variance can be expressed as a quadratic form 
+$s^2_z=\pmb{a}'\pmb{S}\pmb{a}$, which is a scalar quantity because we have a 
+single random function, $\pmb{z}$ we're considering. We'll see in a minute how
+we can extend this when we have multiple random functions that we're examining
+simultaneously.
+
+$\pmb{a'S}$
+
+$`r ltx_at` `r ltx_S` = `r ltx_aS`$
+
+$\pmb{a'Sa}$
+
+$`r ltx_aS` `r ltx_a` = `r ltx_aSa`$
+
+### The random variable $W$
+
+$W$ is another random variable that is a linear combination of the columns of 
+$Y$. It's mean and variance are computed in exactly the same way as with $Z$.
+
+### The covariance of $Z$ and $W$
+We can constructs a bivariate distribution of $Z$ and $W$. We already have the
+individual variances of these two random variables and the covariance of them
+is surprisingly easy to compute.
+
+$s_{wz} = \pmb{a}'\pmb{Sb}$, 
+
+$`r ltx_at` `r ltx_S` `r ltx_b` = `r s_wz`$
+
+
+
+
+
+and using this we can also quite easily compute the
+correlation between $W$ and $Z$ as
+
+$$
+r_{wz} = \frac{s_{wz}}{\sqrt{s^2_zs^2_w}} = \frac{\pmb{a}'\pmb{Sb}}{\sqrt{\pmb{a}'\pmb{Sa}\cdot\pmb{b}'\pmb{Sb}}}
+$$
+
+$$
+r_{wz} = \frac{`r s_wz`}{`r round(sqrt(s2_z * s2_w), 2)`} = `r round(r_wz, 4)`
+$$
+
+## Multiple linear combinations
+If we have the situation were we have multiple linear combinations of a vector of data $\pmb{y}$, then we can describe this mathematically with the following equations:
+$$
+\begin{aligned}
+&z_1 = a_{11}y_1+a_{12}y_2+\cdots+a_{1p}y_p = &\pmb{a}_1'\pmb{y}\\
+&z_2 = a_{21}y_1+a_{22}y_2+\cdots+a_{2p}y_p = &\pmb{a}_2'\pmb{y}\\
+&\hspace{0.25cm}\vdots &\vdots\hspace{0.25cm} \\
+&z_k = a_{k1}y_1+a_{k2}y_2+\cdots+a_{kp}y_p = &\pmb{a}_k'\pmb{y}\\
+\end{aligned}
+$$
+We can, of course, represent this as a matrix equation:
+$$
+\pmb{z}=
+\begin{pmatrix}
+z_1 \\
+z_2 \\
+\vdots\\
+z_k \\
+\end{pmatrix} = 
+\begin{pmatrix}
+\pmb{a}_1'\pmb{y}\\
+\pmb{a}_2'\pmb{y}\\
+\vdots\\
+\pmb{a}_k'\pmb{y}
+\end{pmatrix} = 
+\begin{pmatrix}
+\pmb{a}_1'\\
+\pmb{a}_2'\\
+\vdots\\
+\pmb{a}_k'
+\end{pmatrix}\pmb{y}=
+\pmb{A}\pmb{y}
+$$
+Now we're representing the $k$ linear combinations of $\pmb{y}$ as a vector.
+$\pmb{A}$ now represents the coefficients of all of the linear transformations
+in a compact way.
+
+If we have many $\pmb{y}_i$ observations of data, for example, then we can think
+of each $\pmb{z}$ as a random draw. We can then determine descriptive statistics
+like the sample mean and covariance of $\pmb{z}$.
+
+### Sample mean of $\pmb{z}$
+This is quite straight-forward. We just need to first compute the means of the
+variables $\pmb{y}$ as we've seen above. Then, the sample mean of $\pmb{z}$ is
+given by
+$$
+\pmb{\bar{z}} = \begin{pmatrix}
+\pmb{a}_1'\pmb{\bar{y}}\\
+\pmb{a}_2'\pmb{\bar{y}}\\
+\vdots\\
+\pmb{a}_k'\pmb{\bar{y}}
+\end{pmatrix} = 
+\begin{pmatrix}
+\pmb{a}_1'\\
+\pmb{a}_2'\\
+\vdots\\
+\pmb{a}_k'
+\end{pmatrix}\pmb{\bar{y}} = \pmb{A}\pmb{\bar{y}}
+$$
+
+where each element of $\pmb{z}$ is a weighted sum of the individual variables 
+$\pmb{y}_i$, just like we did above. Now, we have $k$ of them. One for each of
+the $k$ linear combinations.
+
+### The sample covariance matrix of the $\pmb{z}$'s
+
+
+$$
+\begin{aligned}
+S_z &=  \begin{pmatrix}
+\pmb{a}_1'\pmb{S}\pmb{a}_1 & \pmb{a}_1'\pmb{S}\pmb{a}_2 & \cdots & \pmb{a}_1'\pmb{S}\pmb{a}_k\\
+\pmb{a}_2'\pmb{S}\pmb{a}_1 & \pmb{a}_2'\pmb{S}\pmb{a}_2 & \cdots & \pmb{a}_2'\pmb{S}\pmb{a}_k\\
+\vdots&\vdots&&\vdots\\
+\pmb{a}_k'\pmb{S}\pmb{a}_1 & \pmb{a}_k'\pmb{S}\pmb{a}_2 & \cdots & \pmb{a}_k'\pmb{S}\pmb{a}_k\\
+\end{pmatrix}\\[0.5cm]
+&= \begin{pmatrix}
+\pmb{a}_1'(\pmb{S}\pmb{a}_1 & \pmb{S}\pmb{a}_2 & \cdots & \pmb{S}\pmb{a}_k)\\
+\pmb{a}_2'(\pmb{S}\pmb{a}_1 & \pmb{S}\pmb{a}_2 & \cdots & '\pmb{S}\pmb{a}_k)\\
+\vdots&\vdots&&\vdots\\
+\pmb{a}_k'(\pmb{S}\pmb{a}_1 & \pmb{S}\pmb{a}_2 & \cdots & \pmb{S}\pmb{a}_k)\\
+\end{pmatrix}\\[0.5cm]
+&=\begin{pmatrix}
+\pmb{a}_1'\\
+\pmb{a}_2'\\
+\vdots\\
+\pmb{a}_k'
+\end{pmatrix}
+\begin{pmatrix}
+\pmb{S}\pmb{a}_1 & \pmb{S}\pmb{a}_2 & \cdots & \pmb{S}\pmb{a}_k
+\end{pmatrix}\\[0.5cm]
+&=\begin{pmatrix}
+\pmb{a}_1'\\
+\pmb{a}_2'\\
+\vdots\\
+\pmb{a}_k'
+\end{pmatrix}
+\pmb{S}
+\begin{pmatrix}
+\pmb{a}_1 & \pmb{a}_2 & \cdots & \pmb{a}_k\\
+\end{pmatrix}\\[0.5cm]
+&= \pmb{A}\pmb{S}\pmb{A}'
+\end{aligned}
+$$
+Recall that $\pmb{A}$ is defined as a vector whose elements are the row vectors
+$\pmb{a}_i$ and so the way that $\pmb{A}$ and $\pmb{A}'$ are denoted above may 
+seem backwards.
+
+Notice now that the trace of $\pmb{A}\pmb{S}\pmb{A}'$, 
+$tr(\pmb{A}'\pmb{S}\pmb{A})$ is simply the sum of the quadratic forms on the 
+diagonal of $\pmb{S}$.
+
+$$
+tr(\pmb{A}\pmb{S}\pmb{A}') = \sum_{i=1}^k \pmb{a}_i'\pmb{S}\pmb{a}_i
+$$
+
+## The theory in practice
+Now, we can apply these ideas to the data defined above. We first need to define
+the linear functions:
+$$
+\begin{aligned}
+&z_1 = y_1+y_2+y_3+y_4+y_5\\
+&z_2 = 2y_1-3y_2+y_3-2y_4-y_5\\
+&z_3 = -y_1-2y_2+y_3-2y_4+3y_5
+\end{aligned}
+$$
+In matrix form, this is
+$$
+\begin{pmatrix}
+z_1\\
+z_2\\z_3
+\end{pmatrix} = 
+\begin{pmatrix}
+1 & 1 & 1 & 1 & 1\\
+2 & -3 & 1 & -2 & -1\\
+-1 & -2 & 1 & -2 & 3
+\end{pmatrix}
+\begin{pmatrix}
+y_1\\
+y_2\\
+y_3\\
+y_4\\
+y_5
+\end{pmatrix}
+$$
+
+More succinctly, this is simply $\pmb{z} = \pmb{A}\pmb{y}$.
+
+```{r}
+A <- matrix(c(1,1,1,1,1,
+              2,-3,1,-2,-1,
+              -1,-2,1,-2,3), byrow=TRUE, ncol=5, nrow=3)
+
+z_bar <- A%*%y_bar 
+S_z <- A%*%S%*%t(A)
+ltx_z <- latexMatrix(z_bar, matrix="pmatrix")$matrix
+ltx_Sz <- latexMatrix(S_z, matrix="pmatrix")$matrix
+```
+
+$\pmb{\bar{z}}=\pmb{A}\pmb{\bar{y}} = `r ltx_z`$.
+
+We can now compute the covariance matrix for $z$ as
+
+$\pmb{S} = \pmb{ASA}' = `r ltx_Sz`$.
+
+Now that we have computed the covariance matrix, we can generate the
+correlation matrix using the equation $\pmb{R} = \pmb{D}^{-1}\pmb{SD}^{-1}$.
+
+```{r}
+D_z <- diag(sqrt(diag(S_z)), ncol=ncol(S_z))
+D_z_inv <- solve(D_z)
+R_z <- D_z_inv%*%S_z%*%D_z_inv 
+ltx_D_z <- latexMatrix(D_z, matrix="pmatrix")$matrix
+ltx_R_z <- latexMatrix(R_z, matrix="pmatrix")$matrix
+```
+
+$\pmb{R} = \pmb{D}^{-1}\pmb{SD}^{-1} = `r ltx_R_z`$.
+
+The diagonal matrix computed from $\pmb{S}_z$ is
+
+$\pmb{D}_z = `r ltx_D_z`$.
+
+## Distance between vectors - Mahalanobis distance
+If we have 2 vectors in some vector space, we can measure the Euclidean square 
+of the distance between them using the following equation:
+
+$$
+d^2 = (\pmb{y}_1 - \pmb{y}_2)'(\pmb{y}_1 - \pmb{y}_2)
+$$
+When we want to measure the "statistical" distance between two observations,
+however, we need to take covarainces into account. Mahalanobis proposed the 
+following in 1936.
+
+$$
+d^2 = (\pmb{y}_1 - \pmb{y}_2)'\pmb{S}^{-1}(\pmb{y}_1 - \pmb{y}_2)
+$$
+This gives the square of the distance between two vectors (observations) in
+$\mathbb{R}^p$ where there are $p$ variables associated with each observation.
+
+```{r}
+y1 <- t(Y[1,,drop=FALSE])
+y2 <- t(Y[2,,drop=FALSE])
+d2 <- t(y1 - y2)%*%solve(S)%*%(y1-y2) |> as.numeric()
+
+mahal_dist <- mahalanobis(Y[1,,drop=FALSE], center=Y[2,,drop=FALSE], S)
+all.equal(d2, mahal_dist)
+```
+If we just compare two observations in the $\mathbb{R}^5$ space, the first and
+second rows of $\pmb{Y}$, we can see that their Mahalanobis distance is 
+$d^2=`r d2`$. This agrees precisely with the output of the `mahalanobis` 
+function from the `stats` package.
+
+::: {.callout-note}
+## Note
+It is important to note here that the $\pmb{y_i}$ vectors are observations 
+rather than variables. So here each $\pmb{y}_i$ is a vector in $\mathbb{R}^5$
+rather than $\mathbb{R}^{11}$. The notation used in Rencher is a little 
+confusing in this very last section of chapter 3.
+:::
 
