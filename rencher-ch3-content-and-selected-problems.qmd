@@ -20,7 +20,6 @@ library(kableExtra)
 
 $$
 \bar{y} = \frac{\sum_{i=1}^n y_i}{n}
-
 $$
 The sample mean is an unbiased and consistent estimator of the population mean, 
 denoted $\mu$. In other words, $E[\bar{y}]=\mu$ and 
@@ -639,4 +638,292 @@ rather than variables. So here each $\pmb{y}_i$ is a vector in $\mathbb{R}^5$
 rather than $\mathbb{R}^{11}$. The notation used in Rencher is a little 
 confusing in this very last section of chapter 3.
 :::
+
+## Selected exercises
+
+### Problem 10
+
+```{r}
+y1 <- c(35,35,40,10,6,20,35,35,35,30)
+y2 <- c(3.5,4.9,30.0,2.8,2.7,2.8,4.6,10.9,8.0,1.6)
+y3 <- c(2.80,2.70,4.38,3.21,2.73,2.81,2.88,2.90,3.28,3.20)
+
+Y <- cbind(y1,y2,y3)
+```
+
+a.) Calculate $\pmb{S}$ from the data matrix $\pmb{Y}$ using the equation
+
+$$
+\pmb{S} = \frac{1}{n-1}\pmb{Y}'\bigg(\pmb{I}-\frac{1}{n}\pmb{J}\bigg)\pmb{Y}
+$$
+```{r}
+n <- nrow(Y)
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+S <- t(Y)%*%(I - J/n)%*%Y/(n-1)
+
+all.equal(S, cov(Y))
+ltx_S <- latexMatrix(round(S, 2), matrix="pmatrix")$matrix
+```
+$\pmb{S} = `r ltx_S`$
+
+b.) Obtain $\pmb{R}$ by calculating $r_{12}$, $r_{13}$, and $r_{23}$.
+
+```{r}
+r_12 <- S[1,2]/sqrt(S[1,1]*S[2,2])
+r_13 <- S[1,3]/sqrt(S[1,1]*S[3,3])
+r_23 <- S[3,2]/sqrt(S[3,3]*S[2,2])
+
+R_manual <- diag(ncol=3,nrow=3)
+R_manual[1,2] <- R_manual[2,1] <- r_12
+R_manual[1,3] <- R_manual[3,1] <- r_13
+R_manual[2,3] <- R_manual[3,2] <- r_23
+```
+
+
+$$
+\begin{aligned}
+r_{12} &= \frac{s_{12}}{\sqrt{s^2_1s^2_2}} = `r r_12`\\
+r_{13} &= \frac{s_{12}}{\sqrt{s^2_1s^2_2}} = `r r_13`\\
+r_{23} &= \frac{s_{12}}{\sqrt{s^2_1s^2_2}} = `r r_23`\\[0.25cm]
+\pmb{R} &= \begin{pmatrix}
+1 & `r r_12` & `r r_13`\\
+`r r_12` & 1 & `r r_23`\\
+`r r_13` & `r r_23` & 1\\
+\end{pmatrix}
+\end{aligned}
+$$
+c.) Find $\pmb{R}$ using $\pmb{R}=\pmb{D}^{-1}\pmb{S}\pmb{D}^{-1}$.
+
+```{r}
+D <- diag(sqrt(diag(S)), ncol=ncol(S))
+D_inv <- solve(D)
+
+R <- D_inv%*%S%*%D_inv
+all.equal(R, unname(cor(Y)))
+all.equal(R, R_manual)
+ltx_R <- latexMatrix(R, matrix="pmatrix")$matrix
+```
+
+$\pmb{R} = `r ltx_R`$.
+
+### Problem 11
+
+```{r}
+y1 <- c(35,35,40,10,6,20,35,35,35,30)
+y2 <- c(3.5,4.9,30.0,2.8,2.7,2.8,4.6,10.9,8.0,1.6)
+y3 <- c(2.80,2.70,4.38,3.21,2.73,2.81,2.88,2.90,3.28,3.20)
+
+Y <- cbind(y1,y2,y3)
+n <- nrow(Y)
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+S <- t(Y)%*%(I-J/n)%*%Y/(n-1)
+```
+
+
+a.) Find the generalised sample variance of the calcium data $|\pmb{S}|$ as
+in (3.77).
+
+```{r}
+S_eigs <- eigen(S, only.values=TRUE)
+all.equal(det(S), prod(S_eigs$values))
+```
+$|\pmb{S}| = `r det(S)`$.
+
+b.) Find the total sample variance $tr(S)$ as in (3.78).
+
+```{r}
+tr_S <- sum(diag(S))
+```
+
+$tr(S) = `r tr_S`$.
+
+### Problem 12
+
+```{r}
+y1 <- c(51,27,37,42,27,43,41,38,36,26,29)
+y2 <- c(36,20,22,36,18,32,22,21,23,31,20)
+y3 <- c(50,26,41,32,33,43,36,31,27,31,25)
+y4 <- c(35,17,37,34,14,35,25,20,25,32,26)
+y5 <- c(42,27,30,27,29,40,38,16,28,36,25)
+
+Y <- cbind(y1,y2,y3,y4,y5) |> unname()
+n <- nrow(Y)
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+S <- t(Y)%*%(I - J/n)%*%Y/(n-1)
+```
+
+a.) Find the generalised sample variance of the probe word data $|\pmb{S}|$ as
+in (3.77).
+
+```{r}
+#compare this result to spectral decomposition
+S_eigs <- eigen(S, only.values=TRUE)
+all.equal(det(S), prod(S_eigs$values))
+```
+
+$|\pmb{S}| = `r det(S)`$.
+
+b.) Find the total sample variance $tr(S)$ as in (3.78).
+
+```{r}
+tot_var <- sum(diag(S))
+```
+
+$tr(S) = `r tot_var`$.
+
+### Problem 13
+
+```{r}
+d <- 1/sqrt(diag(S))
+D_inv <- diag(d, ncol=length(d), nrow=length(d))
+R <- D_inv%*%S%*%D_inv |> round(3)
+ltx_R <- latexMatrix(R, matrix="pmatrix")$matrix
+```
+
+$\pmb{R} = `r ltx_R`$.
+
+### Problem 14
+
+```{r}
+y1 <- c(35,35,40,10,6,20,35,35,35,30)
+y2 <- c(3.5,4.9,30.0,2.8,2.7,2.8,4.6,10.9,8.0,1.6)
+y3 <- c(2.80,2.70,4.38,3.21,2.73,2.81,2.88,2.90,3.28,3.20)
+
+Y <- cbind(y1,y2,y3) |> unname()
+a <- matrix(c(3,-1,2), ncol=1)
+```
+a.) Evaluate $z$ for each row of the calcium data and find $\bar{z}$ and $s^2_z$
+directly from $z_1, z_2, ..., z_{10}$ using (3.1) and (3.5).
+
+```{r}
+z <- Y%*%a
+n <- length(z)
+
+z_bar <- sum(z)/n
+s_z <- 0
+for(z_i in z) {
+  s_z <- s_z + (z_i - z_bar)^2
+}
+s_z <- s_z/(n-1)
+```
+$\bar{z} = `r z_bar`$, $s^2_z = `r s_z`$. 
+
+
+b.) Use $\bar{z} = \pmb{a}'\pmb{\bar{y}}$ and $s_z = \pmb{a}'\pmb{S}\pmb{a}$ as
+in (3.54) and (3.55).
+
+```{r}
+j <- matrix(rep(1, times=n), ncol=1)
+y_bar <- t(Y)%*%j/n
+z_bar <- t(a)%*%y_bar
+```
+
+$\bar{z} = `r z_bar`$
+
+```{r}
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+S <- t(Y)%*%(I - J/n)%*%Y/(n-1)
+s_z <- t(a)%*%S%*%a
+```
+$s^2_z = `r s_z`$.
+
+
+```{r}
+all.equal(s_z, var(z))
+```
+
+### Problem 15
+
+a.) Evaluate $z$ and $w$ for each row of the calcium data and fine $r_{wz}$ from
+the 10 pairs $(z_i,w_i)$, $i=1,2,...,10$, using (3.10) and (3.13).
+```{r}
+b <- matrix(c(-2,3,1), ncol=1)
+w <- Y%*%b
+w_bar <- t(b)%*%y_bar
+
+s_wz <- s2_z <- s2_w <-0
+for(i in 1:10) {
+  s_wz <- s_wz + (z[i]*w[i])
+  s2_z <- s2_z + (z[i] - z_bar)^2
+  s2_w <- s2_w + (w[i] - w_bar)^2
+}
+
+s_wz <- s_wz - n*z_bar*w_bar
+r_wz <- s_wz/sqrt(s2_z*s2_w)
+```
+
+$$
+r_{wz} = \frac{\sum_{i=1}^n(z_i - \bar{z})(w_i - \bar{w})}{\sqrt{\sum_{i=1}^n(z_i - \bar{z})^2\sum_{i=1}^n(w_i - \bar{w})^2}} = `r r_wz`
+$$
+b.) Find $r_{wz}$ using (3.57).
+
+```{r}
+s_wz <- t(a)%*%S%*%b
+r_wz <- s_wz/sqrt(t(a)%*%S%*%a * t(b)%*%S%*%b)
+```
+
+$$
+r_{wz} = \frac{\pmb{a}'\pmb{S}\pmb{b}}{\sqrt{\pmb{a}'\pmb{S}\pmb{a}\cdot\pmb{b}'\pmb{S}\pmb{b}}} = `r r_wz`
+$$
+
+### Problem 16
+
+
+### Problem 17
+
+
+
+### Problem 18
+
+```{r}
+y1 <- c(47.8,46.4,46.3,45.1,47.6,52.5,51.2,49.8,48.1,45.0,51.2,48.5,52.1,48.2,49.6,50.7,47.2,53.3,46.2,46.3)
+y2 <- c(48.8,47.3,46.8,45.3,48.5,53.2,53.0,50.0,50.8,47.0,51.4,49.2,52.8,48.9,50.4,51.7,47.7,54.6,47.5,47.6)
+y3 <- c(49.0,47.7,47.8,46.1,48.9,53.3,54.3,50.3,52.3,47.3,51.6,53.0,53.7,49.3,51.2,52.7,48.4,55.1,48.1,51.3)
+y4 <- c(49.7,48.4,48.5,47.2,49.3,53.7,54.4,52.7,54.4,48.3,51.9,55.5,55.0,49.8,51.8,53.3,49.5,55.3,48.4,51.8)
+
+Y <- cbind(y1,y2,y3,y4) |> unname()
+```
+
+a.) Find $\pmb{\bar{y}}$, $\pmb{S}$, and $\pmb{R}$
+
+```{r}
+n <- nrow(Y)
+j <- matrix(rep(1, times=n), ncol=1)
+# create a column vector of the variable means
+y_bar <- t(Y)%*%j/n
+
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+S <- t(Y)%*%(I - J/n)%*%Y/(n-1)
+d <- 1/sqrt(diag(S))
+D_inv <- diag(d, ncol=length(d), nrow=length(d))
+R <- D_inv%*%S%*%D_inv
+ltx_ybar <- latexMatrix(y_bar, matrix="pmatrix")$matrix
+ltx_S <- latexMatrix(S, matrix="pmatrix")$matrix
+ltx_R <- latexMatrix(R, matrix="pmatrix")$matrix
+```
+
+$\pmb{\bar{y}} = `r ltx_ybar`$.
+
+$\pmb{S}= `r ltx_S`$.
+
+$\pmb{R} = `r ltx_R`$.
+
+b.) Find $|\pmb{S}|$ and $tr(\pmb{S})$.
+
+```{r}
+tr_S <- sum(diag(S))
+```
+
+$|\pmb{S}| = `r det(S)`$.
+
+$tr(\pmb{S}) = `r tr_S`$.
+
+### Problem 19
+
+
 
