@@ -871,10 +871,61 @@ r_{wz} = \frac{\pmb{a}'\pmb{S}\pmb{b}}{\sqrt{\pmb{a}'\pmb{S}\pmb{a}\cdot\pmb{b}'
 $$
 
 ### Problem 16
+Find the correlation between $y_1$ and $\frac{1}{2}(y_2+y_3)$ using (3.57).
 
+```{r}
+a <- matrix(c(1,0,0), ncol=1)
+b <- matrix(c(0,1/2,1/2), ncol=1)
+z <- Y%*%a
+w <- Y%*%b
+
+r_wz <- t(a)%*%S%*%b/sqrt(t(a)%*%S%*%a * t(b)%*%S%*%b)
+ltx_a <- latexMatrix(a, matrix="pmatrix")$matrix
+ltx_b <- latexMatrix(b, matrix="pmatrix")$matrix
+```
+Here, define $\pmb{z} = \pmb{Ya}$ and $\pmb{w} = \pmb{Yb}$ where
+$\pmb{a} = `r ltx_a`$ and $\pmb{b} = `r ltx_b`$.
+
+Then,
+
+$$
+r_{wz} = \frac{\pmb{a}'\pmb{S}\pmb{b}}{\sqrt{\pmb{a}'\pmb{S}\pmb{a}\cdot\pmb{b}'\pmb{S}\pmb{b}}} = `r r_wz`.
+$$
+A quick check with `all.equal(r_wz, cor(w,z))` confirms that this is correct.
 
 ### Problem 17
 
+Find $\pmb{\bar{z}}$ and $\pmb{S}_z$ using (3.62) and (3.64).
+
+```{r}
+A <- matrix(c(1,1,1,
+              2,-3,2,
+              -1,-2,-3), ncol=3, byrow=TRUE)
+
+z_bar <- A%*%y_bar
+S_z <- A%*%S%*%t(A)
+ltx_z_bar <- latexMatrix(z_bar, matrix="pmatrix")$matrix
+ltx_S_z <- latexMatrix(S_z, matrix="pmatrix")$matrix
+```
+$\pmb{\bar{z}} = `r ltx_z_bar`$.
+
+$\pmb{S}_z = `r ltx_S_z`$.
+
+b.) Find $\pmb{R}_z$ from $\pmb{S}_z$ using (3.37).
+
+```{r}
+d <- 1/sqrt(diag(S_z))
+D_inv <- diag(d, ncol=length(d), nrow=length(d))
+R_z <- D_inv%*%S_z%*%D_inv
+ltx_R_z <- latexMatrix(R_z, matrix="pmatrix")$matrix
+```
+
+
+$$
+\pmb{R} = \pmb{D}^{-1}\pmb{S}\pmb{D}^{-1}\tag{3.37}
+$$
+
+$\pmb{R}_z = `r ltx_R_z`$. 
 
 
 ### Problem 18
@@ -924,6 +975,69 @@ $|\pmb{S}| = `r det(S)`$.
 $tr(\pmb{S}) = `r tr_S`$.
 
 ### Problem 19
+
+a.) Find $\bar{z}$, $\bar{w}$, $s^2_z$, and $s^2_w$ using (3.54) and (3.55).
+
+```{r}
+a <- matrix(c(1,2,1,-3), ncol=1)
+b <- matrix(c(-2,3,-1,2), ncol=1)
+
+n <- nrow(Y)
+j <- matrix(rep(1, times=n), ncol=1)
+y_bar <- t(Y)%*%j/n
+
+z_bar <- t(a)%*%y_bar
+w_bar <- t(b)%*%y_bar
+
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+
+S <- t(Y)%*%(I - J/n)%*%Y/(n-1)
+
+s2_z <- t(a)%*%S%*%a
+s2_w <- t(b)%*%S%*%b
+```
+
+$\bar{z} = `r z_bar`$, $\bar{w} = `r w_bar`$, $s^2_z = `r s2_z`$, 
+$s^2_w = `r s2_w`$.
+
+b.) Find $s_{wz}$ and $r_{wz}$ using (3.56) and (3.57).
+
+```{r}
+s_wz <- t(a)%*%S%*%b
+r_wz <- s_wz/sqrt(s2_z*s2_w)
+```
+$s_{wz} = `r s_wz`$, $r_{wz} = `r r_wz`$.
+
+### Problem 20
+Find $\pmb{\bar{z}}$, $\pmb{S}_z$, and $\pmb{R}_z$ using (3.62), (3.64), and
+(3.37) respectively.
+
+```{r}
+A <- matrix(c(2,3,-1,4,
+              -2,-1,4,-2,
+              3,-2,-1,3), ncol=4, byrow=TRUE)
+n <- nrow(Y)
+j <- matrix(rep(1, times=n), ncol=1)
+y_bar <- t(Y)%*%j/n 
+
+z_bar <- A%*%y_bar
+S_z <- A%*%S%*%t(A)
+
+d <- 1/sqrt(diag(S_z))
+D_inv <- diag(d, ncol=length(d), nrow=length(d))
+R_z <- D_inv%*%S_z%*%D_inv
+ltx_z_bar <- latexMatrix(z_bar, matrix="pmatrix")$matrix
+ltx_S_z <- latexMatrix(S_z, matrix="pmatrix")$matrix
+ltx_R_z <- latexMatrix(R_z, matrix="pmatrix")$matrix
+```
+$\pmb{\bar{z}} = `r ltx_z_bar`$.
+
+$\pmb{S}_z = `r ltx_S_z`$.
+
+$\pmb{R}_z = `r ltx_R_z`$.
+
+
 
 
 
