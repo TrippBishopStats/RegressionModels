@@ -1037,7 +1037,50 @@ $\pmb{S}_z = `r ltx_S_z`$.
 
 $\pmb{R}_z = `r ltx_R_z`$.
 
+### Problem 21
 
+```{r}
+y1 <- c(191,195,181,183,176,208,189,197,188,192,179,183,174,190,188,163,195,186,181,175,192,174,176,197,190)
+y2 <- c(155,149,148,153,144,157,150,159,152,150,158,147,150,159,151,137,155,153,145,140,154,143,139,167,163)
+y3 <- c(179,201,185,188,171,192,190,189,197,187,186,174,185,195,187,161,183,173,182,165,185,178,176,200,187)
+y4 <- c(145,152,149,149,142,152,149,152,159,151,148,147,152,157,158,130,158,148,146,137,152,147,143,158,150)
 
+Y <- cbind(y1,y2,y3,y4) |> unname()
+n <- nrow(Y)
+```
 
+a.) Find the mean vector for all four variables and partition it into 
+$\begin{pmatrix}\pmb{\bar{y}}\\\hline\pmb{\bar{x}}\end{pmatrix}$as in (3.41).
+
+```{r}
+j <- matrix(rep(1, times=n), ncol=1)
+v_bar <- t(j)%*%Y/n 
+y_bar <- matrix(v_bar[1,1:2], ncol=1)
+x_bar <- matrix(v_bar[1,3:4], ncol=1)
+ltx_vbar <- latexMatrix(rbind(y_bar, x_bar), matrix="pmatrix") |> 
+  partition(rows=2)
+ltx_vbar <- ltx_vbar$matrix
+```
+
+$\begin{pmatrix}\pmb{\bar{y}}\\\hline\pmb{\bar{x}}\end{pmatrix} = `r ltx_vbar`$
+
+b.) Find the covariance matrix for all four variables and partition it into
+$$
+\pmb{S} = \begin{pmatrix}
+\pmb{S}_{yy} & \pmb{S}_{yx}\\
+\pmb{S}_{xy} & \pmb{S}_{xx}
+\end{pmatrix}
+$$
+
+as in (3.42)
+
+```{r}
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n^2), ncol=n)
+S <- t(Y)%*%(I-J/n)%*%Y/(n-1) 
+ltx_S <- latexMatrix(S, matrix="pmatrix") |> partition(rows=2, columns=2)
+ltx_S <- ltx_S$matrix
+```
+
+$\pmb{S} = `r ltx_S`$
 
