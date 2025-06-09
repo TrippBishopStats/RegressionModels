@@ -1,0 +1,9 @@
+---
+title: "The Multivariate Normal Distribution"
+format: html
+execute: 
+  warning: false
+  messages: false
+---
+
+
