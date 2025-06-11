@@ -6,4 +6,111 @@ execute:
   messages: false
 ---
 
+```{r}
+rm(list=ls())
+library(matlib)
+```
+
+## Properites of the multivariate normal distribution
+The multivariate normal distribution has a number of useful properties.
+
+1) The distribution is completely specified by the first and second moments.  
+2) Bivariate plots of multivariate normal data show linear trends.  
+3) Uncorrelated variables are independent.  
+4) linear functions of multivariate normal random variables are also normally distributed.  
+5) The density function provides the basis for many useful tests and properties.  
+6) The multivariate normal distribution is often a good approximation even when
+the data are not strictly normal and, in fact, it can be quite robust to departures from normality.  
+
+### The multivariate normal density function
+Before considering the density function of the multivariate normal distribution,
+let's recall the pdf of the univariate case. It will be useful to compare and
+contrast the two functions.
+
+The univariate normal pdf:
+$$
+f(x|\mu,\sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{1}{2}(\frac{x - \mu}{\sigma})^2}
+$$
+The mean and the variance are the only two parameters required to specify the distribution.
+
+The multivariate normal pdf, is similar, but now the parameters are a vector of 
+means $\pmb{\mu}$ and a covariance matrix $\pmb{\Sigma}$.
+
+$$
+f(\pmb{x}|\pmb{\mu},\pmb{\Sigma}) = \frac{1}{\sqrt{2\pi}^p|\pmb{\Sigma}|^{1/2}}e^{-\frac{1}{2}(\pmb{x} - \pmb{\mu})'\pmb{\Sigma}^{-1}(\pmb{x} - \pmb{\mu})}
+$$
+The generalised population variance appears in the denominator and the 
+squared generalised (the Mahalanobis distance) distance appears in the 
+exponential term. The term $p$ represents the number of variables in the 
+distribution.
+
+If there is a large correlation between one or more of the variables in the
+system, then determinant of $\pmb{\Sigma}$ will be smaller. The variance is
+maximum when the variables are orthogonal and decreases as the correlation
+between one or more of them grows. In the extreme case where there is true
+multicolinearity between 2 or more variables, then the determinant is zero. This
+makes sense because in the case where there is multicolinearity, there is at
+least one linearly dependent variable. In this case, there is an eigenvalue of
+$\pmb{\Sigma}$ that is zero. Recall that the determinant of a matrix is the
+product of its eigenvalues. If one or more eigenvalues are zero, then the
+determinant is zero.
+
+## Properties of multivariate normal random variables
+
+### 1) Normality of linear combinations of the variables in $\pmb{y}$.
+If $\pmb{y}\sim N_p(\pmb{\mu}, \pmb{\Sigma})$, then a linear combination of its 
+elements $\pmb{a}'\pmb{y}\sim N(\pmb{a'\mu}, \pmb{a'\Sigma a})$. This comes
+directly from (3.69) and (3.70) as $E[\pmb{a'y}] = \pmb{a'\mu}$ and 
+$\text{var}(\pmb{a'y}) = \pmb{a'\Sigma a}$.
+
+This can be extended to the case where $\pmb{A}$ is a $q\times p$ matrix
+with rank $q, q\leq p$. In this case, 
+$\pmb{Ay}\sim N_q(\pmb{A\mu}, \pmb{A\Sigma A'})$. The same logic is applied here
+and (3.73) and (3.74) provide the motivation.
+
+### 2) Standardised variables
+We can standardise a random vector from a multivariate normal vector in a couple
+of different ways.
+
+The first way utilises the Cholesky decomposition $\pmb{\Sigma}=\pmb{T}'\pmb{T}$
+and then $\pmb{z} = (\pmb{T}')^{-1}(\pmb{y} - \pmb{\mu})$.
+
+This can also be accomplished with 
+$\pmb{z} = (\pmb{\Sigma}^{1/2})^{-1}(\pmb{y} - \pmb{\mu})$. Here, 
+$\pmb{\Sigma}^{1/2}$ is the symmetric square root from (2.112), which uses the
+spectral decomposition to then perform power operations on the resulting
+diagonal matrix $\pmb{D}$ (one of the very handy features of the spectral 
+decomposition $\pmb{A}=\pmb{CDC}'$ is that it makes raising matrices to 
+arbitrary powers very easy to compute.
+
+### 3) $\chi^2$ distribution
+Recall that the square of a standard normal random variable has a $\chi^2_1$
+distribution. In additional, if $Y = \sum_{i=1}^n Z_i^2$, where $Z^2\sim\chi^2_1$,
+then $Y\sim\chi^2_n$.
+
+So, if $\pmb{z} = (\pmb{\Sigma}^{1/2})^{-1}(\pmb{y} - \pmb{\mu})$, then
+$$
+\pmb{z}'\pmb{z} = (\pmb{y} - \pmb{\mu})'(\pmb{\Sigma}^{-1/2})'\pmb{\Sigma}^{-1/2}(\pmb{y} - \pmb{\mu})
+$$
+Since $\pmb{\Sigma}$ is symmetric, $\pmb{\Sigma}^{-1/2}$ is also symmetric and
+therefore is equal to its transpose. Therefore, the two matrix terms in the 
+middle of the expression can be combine to be 
+$$
+\pmb{\Sigma}^{-1/2}\pmb{\Sigma}^{-1/2} = (\pmb{\Sigma}^{-1/2})^2 = \pmb{\Sigma}^{-1}.
+$$
+Therefore, we can simplify the entire equation down to 
+$$
+\pmb{z}'\pmb{z} = (\pmb{y} - \pmb{\mu})'\pmb{\Sigma}^{-1}(\pmb{y} - \pmb{\mu}).
+$$
+
+Since $\pmb{y}\sim N_p(\pmb{\mu}, \pmb{\Sigma})$ and 
+$\pmb{z}\sim N_p(\pmb{0}, \pmb{I})$, then $\pmb{z}'\pmb{z}\sim\chi^2_p$. 
+
+::: {.callout-note}
+This is interesting b/c it implies that the Mahalanobis distance has a $\chi^2$
+distribution. Is this interpretation correct? Is the test of significance of 
+Mahalanobis based on a $\chi^2$ test then?
+:::
+
+### 4) Normality of marginal distributions
 
