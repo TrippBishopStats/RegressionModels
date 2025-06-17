@@ -1,0 +1,9 @@
+---
+title: "Principal Components Analysis"
+format: html
+execute:
+  warning: false
+  messages: false
+---
+
+
