@@ -6,4 +6,177 @@ execute:
   messages: false
 ---
 
+```{r}
+library(psych)
+library(matlib)
+library(kableExtra)
+library(tidyverse)
+
+theme_set(theme_minimal())
+```
+
+## Chapter summary
+Principal component analysis is primarily a dimension reduction technique. It
+uses axes rotation to align the coordinate system along the paths of maximum
+variance, creating a new set of uncorrelated (orthogonal) components. There are
+no predictors or response variables in PCA as it is not a model. True 
+multicolinearity does not affect the technique as it does not make any 
+assumptions about the nature of the data. Component interpretations can, 
+however, be difficult due to the blending of variables into the new coordinate
+axes. PCA is not useful if the original variables are independent of each other
+as in this case they are already the principal components.
+
+## Main points
+1) The spectral decomposition of the covariance matrix $\pmb{S}$ provides the
+rotation to align the coordinate system to maximal variance. The eigenvectors
+of a positive definite matrix are orthogonal.
+2) It is necessary to scale variables in the situation where the scales of the
+variables are very different. If a few variables are on much larger scales and
+with correspondingly larger variances, they will dominate the first few 
+components.
+3) The eigenvalues of the spectral decomposition represent the variance along
+each principal component. The sum of the eigenvalues equals the trace of 
+$\pmb{S}$.
+4) There are 4 main techniques for determining how many principal components to
+keep for further analysis: cumulative variance percentage, mean eigenvalue 
+cutoff, scree plots, and hypothesis testing.
+
+
+
+### Example
+Given the following covariance matrix, we can use the `eigen` function to 
+perform a spectral decomposition to obtain eigenvalues and eigenvectors of 
+$\pmb{S}$.
+
+```{r}
+S <- matrix(
+  c(0.370,0.602,0.149,0.044,0.107,0.209,
+    0.602,2.629,0.801,0.666,0.103,0.377,
+    0.149,0.801,0.458,0.011,-0.013,0.120,
+    0.044,0.666,0.011,1.474,0.252,-0.054,
+    0.107,0.103,-0.013,0.252,0.488,-0.036,
+    0.209,0.377,0.120,-0.054,-0.036,0.324),
+  byrow=TRUE,
+  ncol=6,
+  nrow=6
+)
+ltx_S <- latexMatrix(S, matrix="pmatrix")$matrix
+eigs <- eigen(S, symmetric=TRUE)
+total_var <- sum(eigs$values)
+```
+
+$\pmb{S} = `r ltx_S`$
+
+We can confirm that the sum of the eigen values equals the sum of the $s_{jj}$
+elements of $\pmb{S}$.
+
+$\sum_{j=1}^6 = `r sum(diag(S))` = `r total_var` = \sum{i=1}^6 \lambda_i$.
+
+So that checks out. Now, we can determine what percentage of the total variance
+each principal component accounts for:
+
+```{r}
+pct_var <- eigs$values/total_var
+cum_pct <- cumsum(pct_var)
+mtx_var <- rbind(pct_var,cum_pct)
+rownames(mtx_var) <- c("Variance", "Cumulative Variance")
+kable(mtx_var,
+      col.names= paste("PC", 1:6),
+      digits=3,
+      caption="Percentage of variance accounted for by each principal component.")
+```
+
+From this, we can see that the first two principal components account for a 
+little more than 81% of the total variability in the data.
+
+If we only wanted to retain the first two principal components, then the matrix
+of component scores would be
+
+```{r}
+# find out why eigen produces exactly opposite eigen vectors to what is reported
+# by Rencher.
+A <- -1*t(eigs$vectors)[1:2,] |> round(3) 
+ltx_A <- latexMatrix(A, matrix="pmatrix")$matrix
+```
+
+From this matrix, we can see that the largest component scores are associated 
+with the variables $y_2$ and $y_4$. From the $\pmb{S}$ matrix, we can see that
+these two variables have the largest variances, and so it makes sense that they
+would dominate the largest principal components.
+
+$\pmb{A} = `r ltx_A`$
+
+::: {.callout-note}
+## Scale matters
+If the scales of the variables in the dataset are quite different, it will be
+necessary to standardise the data before performing the rotation. if the scales
+are very different, then the variables with the largest raw scores are nearly
+assured to dominate the analysis.
+:::
+
+## Retaining components
+
+We already saw how we can use the percentage of variance explained to make a
+decision about which components to retain. We can also compare eigenvalues to 
+the average eigenvalue, keeping those that are above average.
+
+```{r}
+avg_eigval <- mean(eigs$values)
+kable(t(eigs$values),
+      col.names= paste("PC", 1:6),
+      digits=3,
+      caption="Eigenvalues associated with each principal component.")
+```
+
+The mean eigenvalue is `r round(avg_eigval, 3)`, so all eigenvalues of $\pmb{S}$
+greater than this value would typically be retained. **Note**: if using a 
+correlation matrix instead of a covariance matrix the mean eigenvalue will be
+one.
+
+```{r}
+R <- cov2cor(S)
+eigs_R <- eigen(R)
+lambda_bar_R <- mean(eigs_R$values)
+```
+$\bar{\lambda}_R = `r lambda_bar_R`$.
+
+We can also make a judgement graphically through the use of a scree plot. The
+idea here is that we look for the point where the plot transitions from a steep
+angle of decent to a relatively gentle slope. The eigenvalue to the left of the
+inflection point indicates which principal component is the last to be retained.
+In the plot below that occurs between the second and third eigenvalue so only 
+the first two principal components should be retained. This is consistent with 
+the previous two methods what have been applied.
+
+```{r}
+#| fig-width: 6
+#| fig-height: 4
+#| fig-align: "center"
+
+data.frame(
+  eignum = 1:length(eigs$values),
+  eigval = eigs$values
+) |> ggplot(aes(x=eignum, y=eigval)) +
+  geom_point(colour="steelblue") + geom_line(colour="steelblue") +
+  labs(
+    title="Scree plot for component selection",
+    x="Eigen number",
+    y="Eigenvalue"
+  )
+```
+
+Hypothesis testing is the final method for determining which component(s) to
+retain for analysis. This method uses an iterative process to create a $\chi^2$
+test statistic to test the null hypothesis that the $k$ smallest population
+eigenvalues, $\gamma_{p-k},...,\gamma{p}$ are equal. The test statistic, $u$ has
+the following form
+$$
+u = \bigg(n - \frac{2p+11}{6}\bigg)\bigg(k\ln \bar{\lambda} - \sum_{i=p-k+1}^p\ln\lambda_i\bigg)
+$$
+and is approximately $\chi^2$ distributed. $H_0$ is rejected if 
+$u\geq\chi_{\alpha,\nu}$ where $\nu = \frac{1}{2}(k-1)(k+2)$.
+
+:::{.callout-note}
+Why does this work and how is it a likelihood ratio test?
+:::
 
