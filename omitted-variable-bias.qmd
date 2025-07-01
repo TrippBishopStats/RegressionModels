@@ -1,0 +1,192 @@
+---
+title: "Omitted Variable Bias"
+format: html
+execute: 
+  warning: false
+  messages: false
+---
+
+```{r initial setup}
+rm(list=ls())
+library(MASS)
+library(tidyverse)
+library(broom)
+library(kableExtra)
+N <- 1000
+```
+
+## The omitted variable problem
+Leaving an important predictor out of a model impacts more than just the model
+fit metrics. While the impact on $R^2$, AIC, or BIC is pretty straight-forward
+to anticipate, there are other more subtle issues. When a model is misspecified
+there is the potential for bias to be introduced into the slope parameter
+estimates for the predictors that are in the model. How much bias, and in what
+direction, depends upon the relationship between the omitted variable and the
+model predictors and the response(s). A variable might be omitted because it
+simply wasn't measured in the experiment or because its relationship to the
+predictors and response(s) is not known to the researchers.
+
+```{r}
+matrix(
+  c("Positive bias", "Negative bias", "Negative bias", "Positive bias"), 
+  byrow=FALSE, ncol=2,
+  dimnames=list(
+    c("**$X_2$ & $Y$ are positively correlated**", 
+      "**$X_2$ & $Y$ are negatively correlated**"),
+    c("$X_1$ & $X_2$ are positively correlated", 
+      "$X_1$ & $X_2$ are negatively correlated")
+  )) |> kable(
+    align="c",
+    caption="Depending on the direction of the different correlations, the 
+    nature of the bias of the slope parameter estimate of $X_1$ will be either 
+    positive or negative")
+```
+
+## Exploring different relationships between the predictors and the response
+We'll consider two predictors called $X_1$ and $X_2$ and a single response
+variable $Y$. We will examine different relationships between the different
+variables and the parameter coefficient estimates that result under these
+different scenarios.
+
+### Generating the data
+The examples will make use of the `mvrnorm` function from the `MASS` package.
+This function is really useful for generating multivariate normal random samples
+with control over the sample covariances and variances.
+
+### Uncorrelated predictors
+If $X_1$ and $X_2$ are not correlated, then the absence of $X_2$ from a model
+with just $X_1$ and $Y$ will not bias the estimate for the slope parameter
+associated with $X_1$.
+
+Once we have generated the predictors, we can relate them to $Y$ with a linear
+equation plus some noise. Linear models assume that the error is normally
+distributed with $\mu=0$ and constant variance $\sigma^2$.
+
+```{r}
+set.seed(42)
+X <- mvrnorm(n=N,
+             mu=c(0, 0),
+             Sigma=matrix(c(3,0,0,3), ncol=2),
+             empirical=TRUE)
+Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
+```
+
+First, let's fit a model with only $X_1$ and $Y$ and look at the slope parameter
+estimate.
+
+```{r}
+df <- data.frame(X,Y)
+lm(Y ~ X1, data=df) |> summary() |> tidy()
+```
+Then, if we include $X_2$ in the model, notice that the coefficient estimate for
+the slope parameter for $X_1$ does not change.
+
+```{r}
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+```
+
+### Positive, moderate ($r=0.5$) correlation between predictors
+Now, make the predictors are now moderately correlated with $r=0.5$. Here, $X_1$
+and $X_2$ are positively correlated and $X_2$ and $Y$ are also positively
+correlated. This means that when $X_2$ is omitted from the model that contains
+both $X_1$ and $Y$, the slope parameter estimate for $X_1$ will be positively
+biased.
+
+```{r}
+set.seed(42)
+X <- mvrnorm(n=N,
+             mu=c(0, 0),
+             Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
+             empirical=TRUE)
+Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
+df <- data.frame(X,Y)
+```
+
+Notice now that the coefficient estimate for X2 has increased quite a bit.
+```{r}
+lm(Y ~ X1, data=df) |> summary() |> tidy()
+```
+
+Now the reveal. Both predictors are now in the model and notice how much the 
+slope of $X_1$ changes.
+```{r}
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+```
+
+### Negative, moderate ($r=0.5$) correlation between predictors
+Now, make the predictors are now moderately correlated with $r=0.5$. Here, $X_1$
+and $X_2$ are positively correlated but $X_2$ and $Y$ are negatively correlated.
+This means that when $X_2$ is omitted from the model that contains both $X_1$ 
+and $Y$, the slope parameter estimate for $X_1$ will be positively biased.
+
+```{r}
+set.seed(42)
+X <- mvrnorm(n=N,
+             mu=c(0, 0),
+             Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
+             empirical=TRUE)
+Y <- 1.15*X[,1] - 0.4*X[,2] + rnorm(N, sd=1.25)
+df <- data.frame(X,Y)
+```
+
+Notice now that the coefficient estimate for X2 has decreased quite by about 
+16%.
+
+```{r}
+lm(Y ~ X1, data=df) |> summary() |> tidy()
+```
+
+Now the reveal. Both predictors are now in the model and notice how much the 
+slope of $X_1$ changes.
+```{r}
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+```
+
+### Positive correlation between predictors but $X_2$ is uncorrelated with $Y$
+The omitted predictor can be very strongly correlated with predictors in the
+model, but if it is not correlated with the response variable, then its omission
+will not have any impact on the model. The following code demonstrates this.
+
+```{r}
+set.seed(42)
+X <- mvrnorm(n=N,
+             mu=c(0, 0),
+             Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
+             empirical=TRUE)
+Y <- 1.15*X[,1] + rnorm(N, sd=1.25)
+df <- data.frame(X,Y)
+```
+
+The slope parameter estimate in the simple linear regression model is right 
+about what we expect it to be.
+
+```{r}
+lm(Y ~ X1, data=df) |> summary() |> tidy()
+```
+
+When $X_2$ is introduced as a second predictor, the slope parameter estimate for
+$X_1$ hardly changes.
+
+```{r}
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+```
+
+
+```{r}
+################################################################################
+### Now lets try with the mtcars dataset rather than simulated data.
+################################################################################
+
+cor(mtcars$hp, mtcars$wt)
+cor(mtcars$hp, mtcars$mpg)
+
+# so here, hp and wt are pretty strongly positively correlated and hp and mpg
+# are strongly negatively correlated. If we treat hp as our omitted variable, we
+# can see that there is a negative bias in the slope parameter estimate for wt
+# in the model where wt is the only predictor.
+
+lm(mpg ~ wt, data=mtcars) |> summary()
+
+lm(mpg ~ wt + hp, data=mtcars) |> summary()
+```
+
