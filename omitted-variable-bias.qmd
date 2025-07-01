@@ -53,6 +53,13 @@ The examples will make use of the `mvrnorm` function from the `MASS` package.
 This function is really useful for generating multivariate normal random samples
 with control over the sample covariances and variances.
 
+:::{.callout-note}
+## Standardised predictors
+In all of these models, the predictors are standardised so that the regression
+coefficients will match the correlation coefficients. This makes it a little
+easier to see what's going on when $X_2$ is omitted from the model.
+:::
+
 ### Uncorrelated predictors
 If $X_1$ and $X_2$ are not correlated, then the absence of $X_2$ from a model
 with just $X_1$ and $Y$ will not bias the estimate for the slope parameter
@@ -68,6 +75,9 @@ X <- mvrnorm(n=N,
              mu=c(0, 0),
              Sigma=matrix(c(3,0,0,3), ncol=2),
              empirical=TRUE)
+
+X <- scale(X, center=TRUE, scale=TRUE)
+
 Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
 ```
 
@@ -98,6 +108,9 @@ X <- mvrnorm(n=N,
              mu=c(0, 0),
              Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
              empirical=TRUE)
+
+X <- scale(X, center=TRUE, scale=TRUE)
+
 Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
 df <- data.frame(X,Y)
 ```
@@ -113,11 +126,11 @@ slope of $X_1$ changes.
 lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
 ```
 
-### Negative, moderate ($r=0.5$) correlation between predictors
-Now, make the predictors are now moderately correlated with $r=0.5$. Here, $X_1$
-and $X_2$ are positively correlated but $X_2$ and $Y$ are negatively correlated.
-This means that when $X_2$ is omitted from the model that contains both $X_1$ 
-and $Y$, the slope parameter estimate for $X_1$ will be positively biased.
+### Negative correlation between between $X_2$ and $Y$
+The predictors are still moderately correlated with $r=0.5$, but $X_2$ and $Y$
+are negatively correlated. This means that when $X_2$ is omitted from the model
+that contains both $X_1$ and $Y$, the slope parameter estimate for $X_1$ will be
+negatively biased.
 
 ```{r}
 set.seed(42)
@@ -125,12 +138,14 @@ X <- mvrnorm(n=N,
              mu=c(0, 0),
              Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
              empirical=TRUE)
+
+X <- scale(X, center=TRUE, scale=TRUE)
+
 Y <- 1.15*X[,1] - 0.4*X[,2] + rnorm(N, sd=1.25)
 df <- data.frame(X,Y)
 ```
 
-Notice now that the coefficient estimate for X2 has decreased quite by about 
-16%.
+Notice now that the coefficient estimate for X2 has decreased compared to .
 
 ```{r}
 lm(Y ~ X1, data=df) |> summary() |> tidy()
