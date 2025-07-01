@@ -53,13 +53,6 @@ The examples will make use of the `mvrnorm` function from the `MASS` package.
 This function is really useful for generating multivariate normal random samples
 with control over the sample covariances and variances.
 
-:::{.callout-note}
-## Standardised predictors
-In all of these models, the predictors are standardised so that the regression
-coefficients will match the correlation coefficients. This makes it a little
-easier to see what's going on when $X_2$ is omitted from the model.
-:::
-
 ### Uncorrelated predictors
 If $X_1$ and $X_2$ are not correlated, then the absence of $X_2$ from a model
 with just $X_1$ and $Y$ will not bias the estimate for the slope parameter
@@ -75,9 +68,6 @@ X <- mvrnorm(n=N,
              mu=c(0, 0),
              Sigma=matrix(c(3,0,0,3), ncol=2),
              empirical=TRUE)
-
-X <- scale(X, center=TRUE, scale=TRUE)
-
 Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
 ```
 
@@ -108,9 +98,6 @@ X <- mvrnorm(n=N,
              mu=c(0, 0),
              Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
              empirical=TRUE)
-
-X <- scale(X, center=TRUE, scale=TRUE)
-
 Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
 df <- data.frame(X,Y)
 ```
@@ -138,9 +125,6 @@ X <- mvrnorm(n=N,
              mu=c(0, 0),
              Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
              empirical=TRUE)
-
-X <- scale(X, center=TRUE, scale=TRUE)
-
 Y <- 1.15*X[,1] - 0.4*X[,2] + rnorm(N, sd=1.25)
 df <- data.frame(X,Y)
 ```
