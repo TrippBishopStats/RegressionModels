@@ -1,6 +1,6 @@
 ---
 title: "Omitted Variable Bias"
-format: html
+format: pdf
 execute: 
   warning: false
   messages: false
@@ -86,7 +86,7 @@ lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
 ```
 
 ### Positive, moderate ($r=0.5$) correlation between predictors
-Now, make the predictors are now moderately correlated with $r=0.5$. Here, $X_1$
+Now, the predictors are moderately correlated ($r=0.5$). Here, $X_1$
 and $X_2$ are positively correlated and $X_2$ and $Y$ are also positively
 correlated. This means that when $X_2$ is omitted from the model that contains
 both $X_1$ and $Y$, the slope parameter estimate for $X_1$ will be positively
@@ -102,13 +102,13 @@ Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
 df <- data.frame(X,Y)
 ```
 
-Notice now that the coefficient estimate for X2 has increased quite a bit.
+Notice that the coefficient estimate for X2 has increased.
 ```{r}
 lm(Y ~ X1, data=df) |> summary() |> tidy()
 ```
 
-Now the reveal. Both predictors are now in the model and notice how much the 
-slope of $X_1$ changes.
+Both predictors are now in the model and notice how much the slope of $X_1$ 
+changes.
 ```{r}
 lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
 ```
@@ -129,14 +129,14 @@ Y <- 1.15*X[,1] - 0.4*X[,2] + rnorm(N, sd=1.25)
 df <- data.frame(X,Y)
 ```
 
-Notice now that the coefficient estimate for X2 has decreased compared to .
-
+Notice now that the coefficient estimate for X1 has decreased compared to what
+we know to be the "truth" based on the data we simulated.
 ```{r}
 lm(Y ~ X1, data=df) |> summary() |> tidy()
 ```
 
-Now the reveal. Both predictors are now in the model and notice how much the 
-slope of $X_1$ changes.
+Both predictors are now in the model and observe how much the slope of $X_1$ 
+changes.
 ```{r}
 lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
 ```
@@ -158,34 +158,33 @@ df <- data.frame(X,Y)
 
 The slope parameter estimate in the simple linear regression model is right 
 about what we expect it to be.
-
 ```{r}
 lm(Y ~ X1, data=df) |> summary() |> tidy()
 ```
 
 When $X_2$ is introduced as a second predictor, the slope parameter estimate for
 $X_1$ hardly changes.
-
 ```{r}
 lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
 ```
 
 
-```{r}
-################################################################################
-### Now lets try with the mtcars dataset rather than simulated data.
-################################################################################
+## Kicking the tyres with `mtcars`
+Now lets try with the mtcars dataset rather than simulated data. Use `hp` and 
+`wt` as predictors and `mpg` as the response. Try `hp` as the omitted variable.
 
+```{r}
 cor(mtcars$hp, mtcars$wt)
 cor(mtcars$hp, mtcars$mpg)
+```
 
-# so here, hp and wt are pretty strongly positively correlated and hp and mpg
-# are strongly negatively correlated. If we treat hp as our omitted variable, we
-# can see that there is a negative bias in the slope parameter estimate for wt
-# in the model where wt is the only predictor.
+`hp` and `wt` are pretty strongly positively correlated and `hp` and `mpg` are
+strongly negatively correlated. Omitting `hp` from the model, we can see that
+there is a negative bias in the slope parameter estimate for `wt` when `wt` is 
+the only predictor.
 
-lm(mpg ~ wt, data=mtcars) |> summary()
-
-lm(mpg ~ wt + hp, data=mtcars) |> summary()
+```{r}
+lm(mpg ~ wt, data=mtcars) |> summary() |> tidy()
+lm(mpg ~ wt + hp, data=mtcars) |> summary() |> tidy()
 ```
 
