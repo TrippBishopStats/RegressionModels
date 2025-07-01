@@ -1,18 +1,21 @@
 ---
 title: "Omitted Variable Bias"
-format: pdf
+format: html
 execute: 
   warning: false
   messages: false
 ---
 
 ```{r initial setup}
-rm(list=ls())
+rm(list=ls()) # clean up the environment
+# load libraries
 library(MASS)
 library(tidyverse)
 library(broom)
 library(kableExtra)
-N <- 1000
+library(latex2exp)
+N <- 1000 # the number of observations in samples
+theme_set(theme_minimal()) # set the theme for all plots
 ```
 
 ## The omitted variable problem
@@ -71,18 +74,68 @@ X <- mvrnorm(n=N,
 Y <- 1.15*X[,1] + 0.4*X[,2] + rnorm(N, sd=1.25)
 ```
 
+Before fitting a model and comparing the slope parameter estimates, let's take
+a look at the correlations between the predictors and $X_2$ and $Y$ to confirm
+that our simulated data is setup the way that we expect it to be.
+
+:::{.callout-tip}
+## Visualise and explore before modeling!
+It's always a good idea to explore your data before fitting a model. This gives
+you the opportunity to get to know the data and to uncover errors before 
+starting the modeling process.
+:::
+
+```{r}
+#| layout-ncol: 2
+#| fig-cap:
+#|    - "Scatter plot of $X_2$ vs $X_1$. The flat LOESS line indicates that the two variables are uncorrelated."
+#|    - "Scatter plot of $Y$ vs $X_2$. The sloped LOESS line indicates that the two variables are positively correlated."
+r <- cor(X[,2], Y) |> round(digits=3)
+tibble(
+  x=X[,1],
+  y=X[,2]
+) |> 
+  ggplot(aes(x,y)) + geom_point(alpha=0.4) +
+  geom_smooth(method="loess", se=FALSE) +
+  annotate("text", label=TeX("$r=0$"),x=3.5,y=-5,size=6,hjust=0) +
+  labs(
+    x=TeX("$X_1$"),
+    y=TeX("$X_2$")
+  )
+tibble(
+  x=X[,2],
+  y=Y
+) |> 
+  ggplot(aes(x,y)) + geom_point(alpha=0.4) +
+  geom_smooth(method="loess", se=FALSE) +
+  annotate("text",label=TeX(paste("$","r=",r,"$")),x=3.5,y=-5,size=6,hjust=0) +
+  labs(
+    x=TeX("$X_2$"),
+    y=TeX("$Y$")
+  )
+```
+
+These data are behaving the way that we expect them to so we can continue on to
+the task of fitting linear models.
+
 First, let's fit a model with only $X_1$ and $Y$ and look at the slope parameter
 estimate.
 
 ```{r}
 df <- data.frame(X,Y)
-lm(Y ~ X1, data=df) |> summary() |> tidy()
+lm(Y ~ X1, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 Then, if we include $X_2$ in the model, notice that the coefficient estimate for
 the slope parameter for $X_1$ does not change.
 
 ```{r}
-lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 ### Positive, moderate ($r=0.5$) correlation between predictors
