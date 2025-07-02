@@ -157,13 +157,19 @@ df <- data.frame(X,Y)
 
 Notice that the coefficient estimate for X2 has increased.
 ```{r}
-lm(Y ~ X1, data=df) |> summary() |> tidy()
+lm(Y ~ X1, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 Both predictors are now in the model and notice how much the slope of $X_1$ 
 changes.
 ```{r}
-lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 ### Negative correlation between between $X_2$ and $Y$
@@ -185,13 +191,19 @@ df <- data.frame(X,Y)
 Notice now that the coefficient estimate for X1 has decreased compared to what
 we know to be the "truth" based on the data we simulated.
 ```{r}
-lm(Y ~ X1, data=df) |> summary() |> tidy()
+lm(Y ~ X1, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 Both predictors are now in the model and observe how much the slope of $X_1$ 
 changes.
 ```{r}
-lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 ### Positive correlation between predictors but $X_2$ is uncorrelated with $Y$
@@ -212,13 +224,19 @@ df <- data.frame(X,Y)
 The slope parameter estimate in the simple linear regression model is right 
 about what we expect it to be.
 ```{r}
-lm(Y ~ X1, data=df) |> summary() |> tidy()
+lm(Y ~ X1, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 When $X_2$ is introduced as a second predictor, the slope parameter estimate for
 $X_1$ hardly changes.
 ```{r}
-lm(Y ~ X1 + X2, data=df) |> summary() |> tidy()
+lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
 
@@ -237,7 +255,13 @@ there is a negative bias in the slope parameter estimate for `wt` when `wt` is
 the only predictor.
 
 ```{r}
-lm(mpg ~ wt, data=mtcars) |> summary() |> tidy()
-lm(mpg ~ wt + hp, data=mtcars) |> summary() |> tidy()
+lm(mpg ~ wt, data=mtcars) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
+lm(mpg ~ wt + hp, data=mtcars) |> summary() |> tidy() |> 
+  mutate(
+    p.value = scales::pvalue(p.value, accuracy=0.0001)
+  ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
