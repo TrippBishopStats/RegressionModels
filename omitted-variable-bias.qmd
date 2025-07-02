@@ -47,9 +47,8 @@ matrix(
 
 ## Exploring different relationships between the predictors and the response
 We'll consider two predictors called $X_1$ and $X_2$ and a single response
-variable $Y$. We will examine different relationships between the different
-variables and the parameter coefficient estimates that result under these
-different scenarios.
+variable $Y$. We will examine different relationships between the variables and
+the parameter coefficient estimates that result under these scenarios.
 
 ### Generating the data
 The examples will make use of the `mvrnorm` function from the `MASS` package.
@@ -62,8 +61,8 @@ with just $X_1$ and $Y$ will not bias the estimate for the slope parameter
 associated with $X_1$.
 
 Once we have generated the predictors, we can relate them to $Y$ with a linear
-equation plus some noise. Linear models assume that the error is normally
-distributed with $\mu=0$ and constant variance $\sigma^2$.
+equation plus some noise. Recall that linear models assume that the error is
+normally distributed with $\mu=0$ and constant variance $\sigma^2$.
 
 ```{r}
 set.seed(42)
@@ -88,7 +87,7 @@ starting the modeling process.
 ```{r}
 #| layout-ncol: 2
 #| fig-cap:
-#|    - "Scatter plot of $X_2$ vs $X_1$. The flat LOESS line indicates that the two variables are uncorrelated."
+#|    - "Scatter plot of $X_2$ vs $X_1$. The nearly flat LOESS line indicates that the two variables are uncorrelated."
 #|    - "Scatter plot of $Y$ vs $X_2$. The sloped LOESS line indicates that the two variables are positively correlated."
 r <- cor(X[,2], Y) |> round(digits=3)
 tibble(
@@ -97,7 +96,8 @@ tibble(
 ) |> 
   ggplot(aes(x,y)) + geom_point(alpha=0.4) +
   geom_smooth(method="loess", se=FALSE) +
-  annotate("text", label=TeX("$r=0$"),x=3.5,y=-5,size=6,hjust=0) +
+  annotate("text", label=TeX("$r=0$"),x=3.5,
+           y=-5,size=6,hjust=0,colour="magenta") +
   labs(
     x=TeX("$X_1$"),
     y=TeX("$X_2$")
@@ -108,7 +108,8 @@ tibble(
 ) |> 
   ggplot(aes(x,y)) + geom_point(alpha=0.4) +
   geom_smooth(method="loess", se=FALSE) +
-  annotate("text",label=TeX(paste("$","r=",r,"$")),x=3.5,y=-5,size=6,hjust=0) +
+  annotate("text",label=TeX(paste("$","r=",r,"$")),x=3.5,
+           y=-5,size=6,hjust=0,colour="magenta") +
   labs(
     x=TeX("$X_2$"),
     y=TeX("$Y$")
@@ -163,8 +164,8 @@ lm(Y ~ X1, data=df) |> summary() |> tidy() |>
   ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
-Both predictors are now in the model and notice how much the slope of $X_1$ 
-changes.
+Both predictors are now in the model and notice that the slope parameter 
+estimate for $X_1$ is now much close to the true value.
 ```{r}
 lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |> 
   mutate(
@@ -174,9 +175,9 @@ lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |>
 
 ### Negative correlation between between $X_2$ and $Y$
 The predictors are still moderately correlated with $r=0.5$, but $X_2$ and $Y$
-are negatively correlated. This means that when $X_2$ is omitted from the model
-that contains both $X_1$ and $Y$, the slope parameter estimate for $X_1$ will be
-negatively biased.
+are now negatively correlated. This means that when $X_2$ is omitted from the
+model that contains both $X_1$ and $Y$, the slope parameter estimate for $X_1$
+will be negatively biased.
 
 ```{r}
 set.seed(42)
@@ -197,8 +198,8 @@ lm(Y ~ X1, data=df) |> summary() |> tidy() |>
   ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
 
-Both predictors are now in the model and observe how much the slope of $X_1$ 
-changes.
+Putting both predictors in the model observe how slope parameter estimate of 
+$X_1$ is now much closer to what we expect it to be.
 ```{r}
 lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |> 
   mutate(
