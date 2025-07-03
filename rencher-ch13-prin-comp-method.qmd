@@ -1,0 +1,125 @@
+---
+title: "EFA - Principle Component Method"
+format: html
+execute: 
+  warning: false
+  messages: false
+---
+
+```{r initial setup}
+rm(list=ls()) # clean up the environment
+# load libraries
+library(MASS)
+library(tidyverse)
+library(matlib)
+library(palmerpenguins)
+```
+
+
+$\pmb{S} \approx \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}}$
+
+$\pmb{S} = \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'$
+
+Use the `penguins` dataset to make a covariance matrix that we can use to 
+demonstrate the mathematics of the method.
+
+```{r}
+df_sub <- penguins[3:5] |> na.omit() |> as.matrix()
+n <- nrow(df_sub)
+I <- diag(ncol=n, nrow=n)
+J <- matrix(rep(1, times=n*n), ncol=n, nrow=n)
+S <- t(df_sub)%*%(I - 1/n*J)%*%df_sub/(n-1)
+# I and J are big, so delete them when we're done with them
+rm(I,J)
+ltx_S <- latexMatrix(S, matrix="pmatrix")$matrix
+```
+
+$\pmb{S} = `r ltx_S`$
+
+Use spectral decomposition, $\pmb{S} = \pmb{C}\pmb{D}\pmb{C}'$. Since $\pmb{S}$
+is positive semi-definite $\pmb{D} = \pmb{D}^{1/2}\pmb{D}^{1/2}$. Therefore,
+$\pmb{S} = \pmb{C}\pmb{D}^{1/2}\pmb{D}^{1/2}\pmb{C}'$. We can't get an 
+expression for $\hat{\pmb{\Lambda}}$ just yet. $\hat{\pmb{\Lambda}}$ needs to be
+a $p\times m$ matrix (remember that there are $p$ variables and $m$ factors) and
+$\pmb{C}\pmb{D}^{1/2}$ is $p\times p$. Therefore, we create $\pmb{C}_1$ and 
+$\pmb{D}_1^{1/2}$ that are build from the first $m$ eigenvalues and eigenvectors
+of $\pmb{S}$.
+
+For our purposes here, let's imagine that we think that there are 2 factors that
+drive the 3 variables in our dataset. Thus, $m=2$.
+
+```{r}
+m <- 2
+eigs_S <- eigen(S, symmetric=FALSE)
+C1 <- eigs_S$vectors[,1:m]
+p <- nrow(S)
+D1 <- sqrt(diag(eigs_S$values, nrow=p, ncol=p))[1:m,1:m]
+```
+
+Now that we have defined $C_1$ and $D_1^{1/2}$, we can create 
+$\hat{\pmb{\Lambda}}$.
+
+```{r}
+Lambda_hat <- C1%*%D1
+ltx_lam_hat <- latexMatrix(Lambda_hat, matrix="pmatrix")$matrix
+```
+
+$\hat{\pmb{\Lambda}} = C_1D_1^{1/2} = `r ltx_lam_hat`$.
+
+```{r}
+prod_lam <- Lambda_hat%*%t(Lambda_hat)
+ltx_prod_lam <- latexMatrix(prod_lam, matrix="pmatrix")$matrix
+```
+
+$\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' = `r ltx_prod_lam`$
+
+The $i^{th}$ diagonal element of $\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'$ is
+equal to the sum of squares of the $i^{th}$ row of $\hat{\pmb{\Lambda}}$. Thus,
+$\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'_{ii} = \pmb{\lambda}_i'\pmb{\lambda}_i$.
+
+For example, 
+$$
+\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'_{11} = \pmb{\lambda}_1'\pmb{\lambda}_1 = (3.873012 -3.844071)
+\begin{pmatrix}
+3.873012 \\
+-3.844071
+\end{pmatrix} = 29.7771
+$$.
+
+But, $\pmb{\lambda}_i'\pmb{\lambda}_i = \sum_{j=1}^m \hat{\lambda}_{ij}^2$ which
+are the communalities. We can use this to get at the uniqueness terms because
+$\hat{\psi}_i = s_{ii} - \sum_{j=1}^m \hat{\lambda}_{ij}^2$. This allows us to
+estimate the uniqueness matrix $\pmb{\Psi}$ by 
+$\hat{\pmb{\Psi}}=\text{diag}(\hat{\psi}_1, \hat{\psi}_2, ..., \hat{\psi}_p)$.
+
+Now we have recaptured all of the elements of the original equation 
+$\pmb{S} \approx \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}}$. We
+can determine the error in our estimate using the error equation 
+$E = S - (\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}})$.
+
+```{r}
+S_vars <- diag(S)
+Psi_diag <- numeric(length=p)
+for(i in 1:p) {
+  h_i <- 0
+  for(j in 1:m) {
+    h_i <- h_i + Lambda_hat[i,j]^2
+  }
+  Psi_diag[i] <- S_vars[i] - h_i
+}
+
+Psi_hat <- diag(Psi_diag, nrow=p,ncol=p)
+```
+
+```{r}
+E <- S - (Lambda_hat%*%t(Lambda_hat) + Psi_hat)
+ltx_E <- latexMatrix(E, matrix="pmatrix")$matrix
+```
+
+$E = `r ltx_E`$
+
+This result demonstrates have the variances are exact but the covariances are
+only approximate.
+
+## A closer look at communality and unique variance
+
