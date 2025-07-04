@@ -14,12 +14,72 @@ library(tidyverse)
 library(matlib)
 library(palmerpenguins)
 ```
+## The common factor model and its covariance structure
 
+$$
+\pmb{y} - \pmb{\mu} = \pmb{\Lambda}\pmb{f} + \pmb{\epsilon}\tag{1}
+$$
 
-$\pmb{S} \approx \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}}$
+### Basic assumptions
+In order for there to be any solution at all to the common factor model in an
+exploratory factor analysis, a number of assumptions must be made. The model 
+will always be underidentified, meaning that there are an infinite number of
+factor scores that will satisfy the equation.
 
-$\pmb{S} = \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'$
+1) The unique variances (A.K.A disturbances or residuals) must be uncorrelated
+with each other and with the factors. This means that $\pmb{\Psi}$ is a 
+diagonal $p\times p$ matrix.
 
+2) The factors are uncorrelated with each other. This is a strong assumption, 
+but it allows for some important simplifications to occur.
+
+3) All factors load onto all manifest variables, so 
+$\lambda_{ij}\neq 0\text{ }\forall\text{ }i,j$.
+
+### The covariance matrix
+To determine the covariance matrix, we simply take the covariance of both sides
+of equation 1.
+
+$$
+\pmb{\Sigma} = \text{cov}(\pmb{y}) = \text{cov}(\Lambda\pmb{f} + \pmb{\epsilon})\tag{2}
+$$
+Since the uniquenesses and factors are independent, the covariances can be 
+summed individually.
+
+$$
+\begin{aligned}
+\pmb{\Sigma} &= \text{cov}(\pmb{y}) = \text{cov}(\Lambda\pmb{f}) + \text{cov}(\pmb{\epsilon})\\
+&= \text{cov}(\Lambda\pmb{f}) + \pmb{\Psi}\\
+&= \Lambda\text{cov}(\pmb{f})\Lambda' + \pmb{\Psi}\\
+&= \Lambda\pmb{I}\Lambda' + \pmb{\Psi}
+\end{aligned}
+$$
+And finally,
+$$
+\pmb{\Sigma} = \Lambda\Lambda' + \pmb{\Psi}\tag{3}
+$$
+
+Recall that an assumption of the orthogonal factor model is that the factors are
+standardised and uncorrelated. This means that the covariance matrix of 
+$\pmb{f}$ is the $p \times p$ identity matrix. The factor loadings are just 
+weighting constants and can therefore be pulled out of the covariance function
+and squared.
+
+Given that all we have are the observed data from the manifest variables, the
+one thing we know for certain is the sample covariance matrix $\pmb{S}$. Based 
+on equation 3 above then, we can say that
+
+$$
+\pmb{S} \approx \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}}\tag{4}
+$$
+where $\hat{\pmb{\Lambda}}$ is the estimated factor loadings matrix.
+
+In the principal component method examined here, $\pmb{\Psi}$ is neglected and
+$\pmb{S}$ is factored into $\pmb{S}=\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'$. Note that 
+equation 4 above is an approximation, but this factoring is an exact equation.
+This is what let's us drop the $\pmb{\Psi}$ term.
+
+## Breakdown with example data
 Use the `penguins` dataset to make a covariance matrix that we can use to 
 demonstrate the mathematics of the method.
 
@@ -36,8 +96,10 @@ ltx_S <- latexMatrix(S, matrix="pmatrix")$matrix
 
 $\pmb{S} = `r ltx_S`$
 
-Use spectral decomposition, $\pmb{S} = \pmb{C}\pmb{D}\pmb{C}'$. Since $\pmb{S}$
-is positive semi-definite $\pmb{D} = \pmb{D}^{1/2}\pmb{D}^{1/2}$. Therefore,
+Using spectral decomposition, $\pmb{S} = \pmb{C}\pmb{D}\pmb{C}'$. Here, 
+$\pmb{C}$ is an orthogonal matrix of the eigenvectors of $\pmb{S}$ and $\pmb{D}$
+is a diagonal matrix of the eigenvalues of $S$. Since $\pmb{S}$ is positive 
+semi-definite $\pmb{D} = \pmb{D}^{1/2}\pmb{D}^{1/2}$. Therefore,
 $\pmb{S} = \pmb{C}\pmb{D}^{1/2}\pmb{D}^{1/2}\pmb{C}'$. We can't get an 
 expression for $\hat{\pmb{\Lambda}}$ just yet. $\hat{\pmb{\Lambda}}$ needs to be
 a $p\times m$ matrix (remember that there are $p$ variables and $m$ factors) and
@@ -83,19 +145,14 @@ $$
 \begin{pmatrix}
 3.873012 \\
 -3.844071
-\end{pmatrix} = 29.7771
-$$.
+\end{pmatrix} = 29.7771.
+$$
 
 But, $\pmb{\lambda}_i'\pmb{\lambda}_i = \sum_{j=1}^m \hat{\lambda}_{ij}^2$ which
 are the communalities. We can use this to get at the uniqueness terms because
 $\hat{\psi}_i = s_{ii} - \sum_{j=1}^m \hat{\lambda}_{ij}^2$. This allows us to
 estimate the uniqueness matrix $\pmb{\Psi}$ by 
 $\hat{\pmb{\Psi}}=\text{diag}(\hat{\psi}_1, \hat{\psi}_2, ..., \hat{\psi}_p)$.
-
-Now we have recaptured all of the elements of the original equation 
-$\pmb{S} \approx \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}}$. We
-can determine the error in our estimate using the error equation 
-$E = S - (\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}})$.
 
 ```{r}
 S_vars <- diag(S)
@@ -110,16 +167,71 @@ for(i in 1:p) {
 
 Psi_hat <- diag(Psi_diag, nrow=p,ncol=p)
 ```
+Now we have recaptured all of the elements of the original equation 
+$\pmb{S} \approx \hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}}$. We
+can determine the error in our estimate using the error equation 
+$\pmb{E} = \pmb{S} - (\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}' + \hat{\pmb{\Psi}})$.
 
 ```{r}
 E <- S - (Lambda_hat%*%t(Lambda_hat) + Psi_hat)
 ltx_E <- latexMatrix(E, matrix="pmatrix")$matrix
 ```
 
-$E = `r ltx_E`$
+$\pmb{E} = `r ltx_E`$
 
 This result demonstrates have the variances are exact but the covariances are
 only approximate.
 
 ## A closer look at communality and unique variance
+Let's start by recalling what $\pmb{\Lambda}$ looks like in general. Using the
+spectral decomposition, we saw that $\pmb{\Lambda}=\pmb{C}_1\pmb{D}_1^{1/2}$.
+Expanded out, this equation looks like
+$$
+\begin{pmatrix}
+\hat{\lambda_{11}} & \hat{\lambda_{12}} & \cdots & \hat{\lambda_{1m}}\\
+\hat{\lambda_{21}} & \hat{\lambda_{22}} & \cdots & \hat{\lambda_{2m}}\\
+\vdots & & \ddots & \vdots\\
+\hat{\lambda_{p1}} & \hat{\lambda_{p2}} & \cdots & \hat{\lambda_{pm}}
+\end{pmatrix} = 
+\begin{pmatrix}
+c_{11} & c_{12} & \cdots & c_{1m}\\
+c_{21} & c_{22} & \cdots & c_{2m}\\
+\vdots & & \ddots & \vdots\\
+c_{p1} & c_{p2} & \cdots & c_{pm}
+\end{pmatrix}
+\begin{pmatrix}
+\sqrt{\theta_1} & 0 & \cdots & 0\\
+0 & \sqrt{\theta_2} & \cdots & 0\\
+\vdots & & \ddots & \vdots\\
+0 & 0 & \cdots & \sqrt{\theta_m}
+\end{pmatrix} = 
+\begin{pmatrix}
+c_{11}\sqrt{\theta_1} & c_{12}\sqrt{\theta_2} & \cdots & c_{1m}\sqrt{\theta_m}\\
+c_{21}\sqrt{\theta_1} & c_{22}\sqrt{\theta_2} & \cdots & c_{2m}\sqrt{\theta_m}\\
+\vdots & & \ddots & \vdots\\
+c_{p1}\sqrt{\theta_1} & c_{p2}\sqrt{\theta_2} & \cdots & c_{pm}\sqrt{\theta_m}\\
+\end{pmatrix}
+$$
+This gives us a since of the structure of $\hat{\pmb{\Lambda}}$. Now, we can think 
+about what this implies about the variance of the manifest variables in our 
+data.
+
+Since we let $\pmb{S}=\hat{\pmb{\Lambda}}\hat{\pmb{\Lambda}}'$, we know that the
+variance of the $i^{th}$ variable is $\pmb{\lambda}_i'\pmb{\lambda}_i$, which is
+just the sum of the squared elements in the $i^{th}$ row of 
+$\hat{\pmb{\Lambda}}$. You can actually confirm this by looking at the example 
+of this above.
+
+The variance of each manifest variable associated with the common factors is
+called the *communality*, and it is denoted $h_i^2$ where
+
+$$
+h_i^2 = \pmb{\lambda}_i'\pmb{\lambda}_i = \sum_{j=1}\lambda_{ij}^2\tag{5}
+$$
+
+The communality and the unique variance associated with the $i^{th}$ manifest
+variable sum to the variance term in $\pmb{S}$, $s_{ii}$.
+
+### The eigenvalues of $\pmb{S}$ and factor loadings
+
 
