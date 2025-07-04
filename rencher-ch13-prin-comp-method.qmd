@@ -230,8 +230,40 @@ h_i^2 = \pmb{\lambda}_i'\pmb{\lambda}_i = \sum_{j=1}\lambda_{ij}^2\tag{5}
 $$
 
 The communality and the unique variance associated with the $i^{th}$ manifest
-variable sum to the variance term in $\pmb{S}$, $s_{ii}$.
+variable sum to the variance term in $\pmb{S}$, $s_{ii}$. The $j^{th}$ factor,
+then, contributes $\lambda_{ij}^2$ to $s_{ii}$. This gives us an indication of
+how much influence a given hypothetical factor might exert on the $i^{th}$ 
+manifest variable.
 
 ### The eigenvalues of $\pmb{S}$ and factor loadings
+Similarly, we can consider the $j^{th}$ factor's contribution to the
+total sample variance, $tr(\pmb{S})$. The total variance associated with the
+$j^{th}$ factor is simply
 
+$$
+\sum_{i=1}^p \lambda_{ij}^2 = \lambda_{1j}^2 + \lambda_{2j}^2 + \cdots + \lambda_{pj}^2\tag{6}
+$$
+Notice that this is simply the dot product (or L2 norm) of the $j^{th}$ column
+vector of $\pmb{\Lambda}$ with itself. It turns out that this sum is nothing but
+the $j^{th}$ eigenvalue. Recall that $\lambda_{ij} = \sqrt{\theta_j}c_{ij}$. 
+Substituting this into equation 6 we get
 
+$$
+\sum_{i=1}^p (\sqrt{\theta_j}c_{ij})^2 = \sum_{i=1}^p \theta_jc_{ij}^2 = \theta_j\sum_{i=1}^p c_{ij}^2 = \theta_j\pmb{c}_j'\pmb{c}_j
+$$
+Now, recall that the $\pmb{c}_j$ are the eigenvectors of $\pmb{S}$, which are
+of unit length, therefore $\pmb{c}_j'\pmb{c}_j = 1$ and we get the important
+result that
+
+$$
+\sum_{i=1}^p \lambda_{ij}^2 = \theta_j
+$$
+
+This the dot product of the $j^{th}$ column of $\pmb{\Lambda}$ with itself is
+equal to the $j^{th}$ eigenvalue. This is a useful result because it gives us an
+easy way to determine the proportion of the total variance that is attributable
+to the $j^{th}$ factor:
+
+$$
+\frac{\sum_{i=1}^p \lambda_{ij}^2}{tr(\pmb{S})} = \frac{\theta_j}{tr(\pmb{S})}.
+$$
