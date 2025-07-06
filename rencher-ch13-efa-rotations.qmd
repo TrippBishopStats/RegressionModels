@@ -1,0 +1,116 @@
+---
+title: "EFA - Rotations"
+format: html
+execute: 
+  warning: false
+  messages: false
+---
+
+```{r initial setup}
+rm(list=ls()) # clean up the environment
+# load libraries
+library(MASS)
+library(tidyverse)
+library(matlib)
+library(latex2exp)
+library(kableExtra)
+
+rotate <- function(v, phi=pi/2) {
+  rot_mat <- matrix(c(cos(phi), -sin(phi),
+                      sin(phi), cos(phi)), byrow=TRUE, ncol=2)
+  v%*%rot_mat
+}
+```
+
+## Orthogonal matrices are rotation matrices
+Orthogonal matrices have many really useful properties. One of those properties
+is that a linear transformation involving an orthogonal matrix preserves lengths
+angles. In the example below, the vectors 
+$\pmb{x}_1'=\begin{pmatrix}1&0\end{pmatrix}$ and 
+$\pmb{x}_2'=\begin{pmatrix}1&1\end{pmatrix}$ (in green) are rotated through an 
+angle of $\pi/2.5$ radians. Note that after the rotation, the vectors (in red) 
+are the same length and the angle between then remains the same.
+
+
+```{r}
+X <- matrix(c(1,1,
+              0,1), ncol=2, byrow=FALSE)
+
+X_1 <- rotate(X, phi=-pi/2.5)
+
+xlim <- c(0,1.1)
+ylim <- c(0,1.5)
+# proper geometry requires asp=1
+plot( xlim, ylim, type="n", xlab="X", ylab="Y", asp=1)
+
+vectors(X, col="seagreen")
+vectors(X_1, col="firebrick")
+```
+
+The angle between the vectors before the transformation is 
+$`r angle(X[1,], X[2,])`^{\circ}$ and after the transformation is angle is 
+$`r angle(X_1[1,], X_1[2,])`^{\circ}$. We can verify that the length of each
+vector remains unchanged by this transformation.
+
+$||\pmb{x}_1|| = `r Dot(X[1,], X[1,])`$
+
+$||\pmb{x}_1'|| = `r Dot(X_1[1,], X_1[1,])` = 1$
+
+$||\pmb{x}_2|| = \sqrt{`r Dot(X[2,], X[2,])`} = \sqrt{2}$
+
+$||\pmb{x}_2'|| = \sqrt{`r Dot(X_1[2,], X_1[2,])`} = \sqrt{2}$
+
+## An example of an orthongal rotation
+
+```{r}
+Lambda <- matrix(c(0.969, -0.231,
+                   0.519, 0.807,
+                   0.785, -0.587,
+                   0.971, -0.210,
+                   0.704, 0.667), byrow=TRUE, ncol=2)
+
+new_axes <- matrix(c(1,0,0,1), byrow=TRUE, ncol=2) |> rotate(-35/180*pi)
+
+df <- tibble(
+  x1=0, 
+  x2=new_axes[1,2], 
+  y1=0, 
+  y2=new_axes[1,1],
+  x3=new_axes[2,2],
+  y3=new_axes[2,1],
+)
+
+tibble(
+  x=Lambda[,1],
+  y=Lambda[,2]
+) |> ggplot(aes(x,y)) + geom_point() + ylim(-0.75, 1) + xlim(0,1) + 
+  coord_fixed(ratio=1) + 
+  geom_segment(data=df, aes(x=x1, y=y1,xend=x2, yend=y2),
+               arrow = arrow(length = unit(0.25,"cm")), linewidth=0.75,
+               colour="grey60") +
+  geom_segment(data=df, aes(x=x1, y=y1,xend=x3, yend=y3),
+               arrow = arrow(length = unit(0.25,"cm")), linewidth=0.75,
+               colour="grey60") +
+  annotate("text", label=TeX("$f^*_2$"), x=(new_axes[1,2]+0.07),
+           y=new_axes[1,1], colour="grey60", size=5) +
+  annotate("text", label=TeX("$f^*_1$"), x=(new_axes[2,2]+0.07),
+           y=new_axes[2,1], colour="grey60", size=5) +
+  theme_minimal()
+```
+
+```{r}
+Lambda_star <- rotate(Lambda, -35/180*pi) |> round(digits=3)
+
+ltx_lambda <- latexMatrix(Lambda, matrix="pmatrix")$matrix
+ltx_lambda_star <- latexMatrix(Lambda_star, matrix="pmatrix")$matrix
+```
+
+
+\begin{aligned}
+\pmb{\Lambda^*} = \pmb{\Lambda}\pmb{T} &= `r ltx_lambda` 
+\begin{pmatrix}
+0.819 & 0.574 \\
+-0.574 & 0.819
+\end{pmatrix} \\[0.25cm]
+                                       &= `r ltx_lambda_star`
+\end{aligned}
