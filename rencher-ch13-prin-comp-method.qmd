@@ -187,12 +187,13 @@ Let's start by recalling what $\pmb{\Lambda}$ looks like in general. Using the
 spectral decomposition, we saw that $\pmb{\Lambda}=\pmb{C}_1\pmb{D}_1^{1/2}$.
 Expanded out, this equation looks like
 $$
+\begin{aligned}
 \begin{pmatrix}
 \hat{\lambda_{11}} & \hat{\lambda_{12}} & \cdots & \hat{\lambda_{1m}}\\
 \hat{\lambda_{21}} & \hat{\lambda_{22}} & \cdots & \hat{\lambda_{2m}}\\
 \vdots & & \ddots & \vdots\\
 \hat{\lambda_{p1}} & \hat{\lambda_{p2}} & \cdots & \hat{\lambda_{pm}}
-\end{pmatrix} = 
+\end{pmatrix} &= 
 \begin{pmatrix}
 c_{11} & c_{12} & \cdots & c_{1m}\\
 c_{21} & c_{22} & \cdots & c_{2m}\\
@@ -204,13 +205,15 @@ c_{p1} & c_{p2} & \cdots & c_{pm}
 0 & \sqrt{\theta_2} & \cdots & 0\\
 \vdots & & \ddots & \vdots\\
 0 & 0 & \cdots & \sqrt{\theta_m}
-\end{pmatrix} = 
+\end{pmatrix}\\[0.5cm]
+&= 
 \begin{pmatrix}
 c_{11}\sqrt{\theta_1} & c_{12}\sqrt{\theta_2} & \cdots & c_{1m}\sqrt{\theta_m}\\
 c_{21}\sqrt{\theta_1} & c_{22}\sqrt{\theta_2} & \cdots & c_{2m}\sqrt{\theta_m}\\
 \vdots & & \ddots & \vdots\\
 c_{p1}\sqrt{\theta_1} & c_{p2}\sqrt{\theta_2} & \cdots & c_{pm}\sqrt{\theta_m}\\
 \end{pmatrix}
+\end{aligned}
 $$
 This gives us a since of the structure of $\hat{\pmb{\Lambda}}$. Now, we can think 
 about what this implies about the variance of the manifest variables in our 
