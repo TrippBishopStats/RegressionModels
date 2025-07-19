@@ -1,0 +1,197 @@
+---
+title: "Ch 13 EFA - Exercises"
+format: html
+execute: 
+  warning: false
+  messages: false
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(psych)
+library(kableExtra)
+theme_set(theme_minimal())
+```
+
+
+## Problem 1
+Show that the assumptions lead to (13.2), $\text{var}(y_i) = \lambda_{i1}^2 + \lambda_{i2}^2 + \cdots + \lambda_{in}^2 + \psi_i$.
+
+The assumptions that go into (13.2) are:
+
+$$
+\begin{aligned}
+\text{var}(f_i) &= 1\\
+\text{var}(\epsilon_i) &= \psi_i\\
+\text{cov}(\epsilon_i, f_j) &= 0\\
+\text{cov}(f_i, f_j) &= 0
+\end{aligned}
+$$
+The basic model is $\pmb{y} - \pmb{\mu} = \pmb{\Lambda}\pmb{f} + \pmb{\epsilon}$
+(13.1). If we expand the model given in (13.1), the $i^{th}$ equation in the 
+system will be
+$$
+y_i - \mu_i = \lambda_{i1}f_i + \lambda_{i2}f_2 + \cdots + \lambda_{im}f_m + \epsilon_i.
+$$
+If we take the variance of both sides, we get
+
+$$
+\text{var}(y_i - \mu_i) = \text{var}(\lambda_{i1}f_i + \lambda_{i2}f_2 + \cdots + \lambda_{im}f_m + \epsilon_i)
+$$
+Since $\mu_i$ is just a scalar, it drops out of the variance expression. On the
+RHS, we can make a number of simplifications because of the assumptions. Since
+all of the $f$ terms and $\epsilon$ are uncorrelated, all of the covariance 
+terms drop out. Furthermore, the factor loadings are simply scalars, so we can
+pull them out of the variance expressions. The result of all of this is
+
+$$
+\text{var}(y_i) = \lambda_{i1}^2\text{var}(f_1) + \lambda_{i2}^2\text{var}(f_2) + \cdots + \lambda_{im}^2\text{var}(f_m) + \text{var}(\epsilon_i)
+$$
+This equation simplifies further when we apply the remaining assumptions: 
+$\text{var}(f_i) = 1$ and $\text{var}(\epsilon) = \psi_i$:
+
+$$
+\text{var}(y_i) = \lambda_{i1}^2 + \lambda_{i2}^2 + \cdots + \lambda_{im}^2 + \psi_i
+$$
+which is the expression that we sought.
+
+## Problem 2
+Verify that $\text{cov}(\pmb{y}, \pmb{f}) = \pmb{\Lambda}$ as in (13.13).
+
+The easiest way to do this is to consider a $y_i$ and $f_j$ in general as a way
+of defining the elements of $\pmb{\Lambda}$.
+
+$$
+\text{cov}(y_i, f_j) = E[(y_i - \mu_i)(f_j - \mu_{f_j})]
+$$
+By definition, $E[f_j]=0$ and so $u_{f_j}$ drops out immediately. Furthermore,
+using the model defined in (13.1), we can make the following substitution:
+
+$$
+y_i - \mu_i = \lambda_{i1}f_i + \lambda_{i2}f_2 + \cdots + \lambda_{im}f_m + \epsilon_i
+$$
+Applying these two facts gives the following expression
+
+$$
+\begin{aligned}
+\text{cov}(y_i, f_j) &= E[(y_i - \mu_i)(f_j - \mu_{f_j})]\\
+&= E[(\lambda_{i1}f_1 + \lambda_{i2}f_2 + \cdots + \lambda_{im}f_m + \epsilon_i)f_j]\\
+&= E[\lambda_{i1}f_1f_j + \lambda_{i2}f_2f_j + \cdots + \lambda_{ij}f_j^2 + \cdots + \lambda_{im}f_mf_j + \epsilon_if_j]\\
+&= \lambda_{i1}\text{cov}(f_1,f_j) + \lambda_{i2}\text{cov}(f_2,f_j) + \cdots + \lambda_{ij}\text{var}(f_j) + \cdots + \lambda_{im}\text{cov}(f_m,f_j) +  \text{cov}(\epsilon_i,f_j)
+\end{aligned}
+$$
+Since $\text{cov}(f_j, f_j) = \text{var}(f_j) = 1$, $\text{cov}(\epsilon_i,f_j)=0$ and $\text{cov}(f_k,f_j)=0, k\neq j$, this
+last expression greatly simplifies to $\text{cov}(y_i, f_j)=\lambda_{ij}$. Doing
+this for $i=1,2,...,p$ and $j=1,2,...m$ yields the $p\times m$ matrix 
+$\pmb{\Lambda}$.
+
+## Problem 8
+
+```{r}
+y1 <- c(47.8,46.4,46.3,45.1,47.6,52.5,51.2,49.8,48.1,45.0,51.2,48.5,52.1,48.2,49.6,50.7,47.2,53.3,46.2,46.3)
+y2 <- c(48.8,47.3,46.8,45.3,48.5,53.2,53.0,50.0,50.8,47.0,51.4,49.2,52.8,48.9,50.4,51.7,47.7,54.6,47.5,47.6)
+y3 <- c(49.0,47.7,47.8,46.1,48.9,53.3,54.3,50.3,52.3,47.3,51.6,53.0,53.7,49.3,51.2,52.7,48.4,55.1,48.1,51.3)
+y4 <- c(49.7,48.4,48.5,47.2,49.3,53.7,54.4,52.7,54.4,48.3,51.9,55.5,55.0,49.8,51.8,53.3,49.5,55.3,48.4,51.8)
+
+Y <- cbind(y1,y2,y3,y4) |> unname()
+R <- cor(Y)
+p <- nrow(R)
+eigs_R <- eigen(R, symmetric=FALSE)
+m <- 2
+C1 <- eigs_R$vectors[,1:m]
+D1 <- sqrt(diag(eigs_R$values, nrow=p, ncol=p))[1:m, 1:m]
+
+Lambda_hat <- C1%*%D1
+loadings <- Lambda_hat%*%t(Lambda_hat)
+
+efa.mod <- fa(R, nfactors=2, rotate="oblimin")
+
+
+efa.mod$complexity
+```
+
+
+
+## Problem 11
+
+```{r}
+# Flea data
+Y <- matrix(c(189,245,137,163,
+              192,260,132,217,
+              217,276,141,192,
+              221,299,142,213,
+              171,239,128,158,
+              192,262,147,173,
+              213,278,136,201,
+              192,255,128,185,
+              170,244,128,192,
+              201,276,146,186,
+              195,242,128,192,
+              205,263,147,192,
+              180,252,121,167,
+              192,283,138,183,
+              200,294,138,188,
+              192,277,150,177,
+              200,287,136,173,
+              181,255,146,183,
+              192,287,141,198,
+              181,305,184,209,
+              158,237,133,188,
+              184,300,166,231,
+              171,273,162,213,
+              181,297,163,224,
+              181,308,160,223,
+              177,301,166,221,
+              198,308,141,197,
+              180,286,146,214,
+              177,299,171,192,
+              176,317,166,213,
+              192,312,166,209,
+              176,285,141,200,
+              169,287,162,214,
+              164,265,147,192,
+              181,308,157,204,
+              192,276,154,209,
+              181,278,149,235,
+              175,271,140,192,
+              197,303,170,205),
+            byrow=TRUE,
+            ncol=4)
+
+R <- cor(Y)
+eigs_R <- eigen(R, symmetric=FALSE)
+p <- ncol(R)
+pct <- eigs_R$values/p
+cumpct <- cumsum(pct)
+
+mtx <- rbind(eigenvalues=eigs_R$values, pct, cumpct)
+kable(mtx, digits=3)
+```
+
+There are two eigenvalues > 1 and by cumulative percentage 2 factors are also
+indicated. The screen plot is less definitive. There is not a distinct flattening
+out of the curve.
+
+```{r}
+tibble(
+  eignum = 1:p,
+  eigval = eigs_R$values
+) |> 
+ggplot(aes(x=eignum, y=eigval)) + geom_point() + geom_line()
+```
+
+```{r}
+# extract the factors "by hand" first, then use the fa function from psych
+# package.
+m <- 2
+C1 <- eigs_R$vectors[,1:m]
+D1 <- sqrt((diag(eigs_R$values, ncol=p, nrow=p)))[1:m, 1:m]
+
+Lambda_hat <- C1%*%D1
+loadings <- Lambda_hat%*%t(Lambda_hat)
+
+
+(efa.mod <- fa(R, nfactors=2, rotate="none"))
+```
+
