@@ -9,13 +9,15 @@ execute:
 ```{r initial setup}
 rm(list=ls()) # clean up the environment
 # load libraries
-library(MASS)
-library(tidyverse)
-library(broom)
-library(kableExtra)
+library(MASS); library(tidyverse); library(broom); library(kableExtra)
 library(latex2exp)
 N <- 1000 # the number of observations in samples
-theme_set(theme_minimal()) # set the theme for all plots
+base_theme <- theme_minimal() +
+  theme(
+    axis.title=element_text(size=14),
+    axis.text=element_text(size=12)
+  )
+theme_set(base_theme) # set the theme for all plots
 ```
 
 ## The omitted variable problem
@@ -239,6 +241,94 @@ lm(Y ~ X1 + X2, data=df) |> summary() |> tidy() |>
     p.value = scales::pvalue(p.value, accuracy=0.0001)
   ) |> kable(digits=4, align=c("l",rep("r", times=4)))
 ```
+
+## Characterising the bias - Monte Carlo simulations
+We can get a sense for just how variable the bias is by perform a Monte Carlo
+simulation with 1000 replications of the experiment. The idea here is that we
+perform the simulation many times, recording the slope parameter coefficient
+estimate and its standard error for each run of the simulation. That lets us
+build up an empirical distribution of the slope parameter coefficient
+estimate which we can use to ask questions about the nature of the bias 
+introduced by omitting a key variable.
+
+In this scenario, we will use the set up where $X_1$ and $X_2$ are positively 
+correlated, but $X_2$ is negatively correlated with $Y$. In this case, we expect
+that the slope parameter coefficient estimate for $X_1$ will be negatively 
+biased.
+
+```{r}
+#| label: fig-cap
+#| fig-cap: "Empirical distributions of the coefficient estimate and its standard error. Green line represent the 95% CIs."
+#| fig-subcap: 
+#|   - "Estimates of the slope parameter coefficient"
+#|   - "The standard error of the coefficient estimate."
+#| layout-ncol: 2
+
+n <- 1000 # the number of simulations to run
+# store the model output for each trial in a pair of vectors
+estimates <- stderrs <- numeric(length=n)
+capture <- logical(length=n)
+t_star <- qt(0.975, df=(N-2))
+
+for(i in 1:n) {
+  X <- mvrnorm(n=N,
+             mu=c(0, 0),
+             Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
+             empirical=TRUE)
+  Y <- 1.15*X[,1] - 0.4*X[,2] + rnorm(N, sd=1.25)
+  df <- data.frame(X,Y)
+  mod.sum <- lm(Y ~ X1, data=df) |> summary()
+  
+  est <- mod.sum$coefficients[2,1]
+  stderr <- mod.sum$coefficients[2,2]
+  estimates[i] <- est
+  stderrs[i] <- stderr
+  
+  CI_lower <- est - t_star*stderr
+  CI_upper <- est + t_star*stderr
+  
+  # does the 95% CI for this model run actually capture the true parameter
+  # coefficient?
+  capture[i] <- (CI_lower < 1.15 & CI_upper > 1.15)
+}
+CI_est_95 <- quantile(estimates, probs=c(0.025, 0.975))
+CI_err_95 <- quantile(stderrs, probs=c(0.025, 0.975))
+df <- tibble(coeff = estimates, stderr = stderrs)
+df |> 
+  ggplot(aes(x=coeff)) + 
+    geom_histogram(colour="white", fill="steelblue", bins=20, alpha=0.6) +
+    geom_vline(xintercept=CI_est_95[1], colour="seagreen", linewidth=1) +
+    geom_vline(xintercept=CI_est_95[2], colour="seagreen", linewidth=1) +
+    labs(x="Coefficient estimates",y="Frequency")
+df |> 
+  ggplot(aes(x=stderr)) + 
+    geom_histogram(colour="white", fill="steelblue", bins=20, alpha=0.6) +
+    geom_vline(xintercept=CI_err_95[1], colour="seagreen", linewidth=1) +
+    geom_vline(xintercept=CI_err_95[2], colour="seagreen", linewidth=1) +
+    labs(x="Std. error",y="Frequency")
+```
+
+Temp playground:
+```{r}
+X <- mvrnorm(n=N,
+             mu=c(0, 0),
+             Sigma=matrix(c(3,1.5,1.5,3), ncol=2),
+             empirical=TRUE)
+Y <- 1.15*X[,1] - 0.4*X[,2] + rnorm(N, sd=1.25)
+df <- data.frame(X,Y)
+mod.sum <- lm(Y ~ X1, data=df) |> summary()
+
+est <- mod.sum$coefficients[2,1]
+stderr <- mod.sum$coefficients[2,2]
+CI_lower <- est - t_star*stderr
+CI_upper <- est + t_star*stderr
+
+# does the 95% CI for this model run actually capture the true parameter
+# coefficient?
+capture <- (CI_lower < 1.15 & CI_upper > 1.15)
+
+```
+
 
 
 ## Kicking the tyres with `mtcars`

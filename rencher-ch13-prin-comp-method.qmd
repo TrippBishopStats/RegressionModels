@@ -27,11 +27,15 @@ will always be underidentified, meaning that there are an infinite number of
 factor scores that will satisfy the equation.
 
 1) The unique variances (A.K.A disturbances or residuals) must be uncorrelated
-with each other and with the factors. This means that $\pmb{\Psi}$ is a 
-diagonal $p\times p$ matrix.
+with each other as well the factors: $\text{cov}(\epsilon_i, \epsilon_j)=0$ and 
+$\text{cov}(\epsilon_i, f_j)=0$. This means that $\pmb{\Psi}$ is a diagonal 
+$p\times p$ matrix.
 
-2) The factors are uncorrelated with each other. This is a strong assumption, 
-but it allows for some important simplifications to occur.
+2) The factors are uncorrelated with each other, $\text{cov}(f_i, f_j)=0$. This 
+is a strong assumption, but it allows for some important simplifications to 
+occur.
+
+3) $E[f_i]=0$ and $\text{var}(f_i) = 1$. $\text{var}(\epsilon_i) = \psi_i$.
 
 3) All factors load onto all manifest variables, so 
 $\lambda_{ij}\neq 0\text{ }\forall\text{ }i,j$.
@@ -116,7 +120,13 @@ eigs_S <- eigen(S, symmetric=FALSE)
 C1 <- eigs_S$vectors[,1:m]
 p <- nrow(S)
 D1 <- sqrt(diag(eigs_S$values, nrow=p, ncol=p))[1:m,1:m]
+ltx_C1 <- latexMatrix(C1, matrix="pmatrix")$matrix
+ltx_D1 <- latexMatrix(D1, matrix="pmatrix")$matrix
 ```
+
+$C_1 = `r ltx_C1`$
+
+$D_1^{1/2} = `r ltx_D1`$
 
 Now that we have defined $C_1$ and $D_1^{1/2}$, we can create 
 $\hat{\pmb{\Lambda}}$.
@@ -215,7 +225,7 @@ c_{p1}\sqrt{\theta_1} & c_{p2}\sqrt{\theta_2} & \cdots & c_{pm}\sqrt{\theta_m}\\
 \end{pmatrix}
 \end{aligned}
 $$
-This gives us a since of the structure of $\hat{\pmb{\Lambda}}$. Now, we can think 
+This gives us a sense of the structure of $\hat{\pmb{\Lambda}}$. Now, we can think 
 about what this implies about the variance of the manifest variables in our 
 data.
 

@@ -1,3 +1,5 @@
+rm(list=ls())
+
 X <- c(1,3,2,4)
 Y <- c(2,-1,3,1)
 
@@ -13,7 +15,6 @@ data <- data.frame(math = c(84, 82, 81, 89, 73, 94, 92, 70, 88, 95),
 
 D <- as.matrix(data)
 n <- nrow(data)
-colMeans(D)%*%t()
 
 means <- rep(1, times=n)%*%t(colMeans(D))
 # centre the observations
@@ -63,7 +64,13 @@ B
 
 matrix(c(1,1,1), ncol=1)%*%matrix(c(2,-1,3),nrow=1)
 
+# correlation is invariant under a linear transformation
 
+cov(data$math, data$science)
+cor(data$math, data$science)
 
+X1 <- 0.5*data$math + 27
+X2 <- 0.8*data$science - 11
 
-
+cov(X1, X2)
+cor(X1, X2)
