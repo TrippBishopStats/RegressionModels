@@ -336,7 +336,7 @@ Now lets try with the mtcars dataset rather than simulated data. Use `hp` and
 cor(mtcars$hp, mtcars$wt)
 cor(mtcars$hp, mtcars$mpg)
 ```
-
+fdfd
 `hp` and `wt` are pretty strongly positively correlated and `hp` and `mpg` are
 strongly negatively correlated. Omitting `hp` from the model, we can see that
 there is a negative bias in the slope parameter estimate for `wt` when `wt` is 
