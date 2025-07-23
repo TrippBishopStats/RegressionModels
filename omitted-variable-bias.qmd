@@ -326,10 +326,7 @@ CI_upper <- est + t_star*stderr
 # does the 95% CI for this model run actually capture the true parameter
 # coefficient?
 capture <- (CI_lower < 1.15 & CI_upper > 1.15)
-
 ```
-
-
 
 ## Kicking the tyres with `mtcars`
 Now lets try with the mtcars dataset rather than simulated data. Use `hp` and 
