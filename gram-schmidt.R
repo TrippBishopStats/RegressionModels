@@ -1,6 +1,5 @@
 # Orthogonal matrix properties
 
-
 # implement the Gram-Schmidt algorithm for producing an orthonormal matrix.
 # ideal case error handling
 # matrix is square with at least 2 columns
